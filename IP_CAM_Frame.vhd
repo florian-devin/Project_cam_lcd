@@ -24,7 +24,30 @@ entity IP_CAM_Frame is
         new_data    :   out std_logic;
         new_frame   :   out std_logic;
         data        :   out std_logic_vector(15 downto 0) := std_logic_vector(to_signed(0, 16));
-        ack         :   in  std_logic
+        ack         :   in  std_logic;
+
+        -- FIFO GREEN (6 bits)
+        WrData_green              :   out std_logic_vector(5 downto 0);
+        --FIFO_Full           :   out
+        --FIFO_Almost_Full    :   out
+        WrFIFO_green              :   out std_logic;
+
+        RrData_green              :   in  std_logic_vector(5 downto 0);
+        --FIFO_Empty          :   out
+        --FIFO_Almost_Empty   :   out
+        RdFIFO_green              :   out std_logic;
+
+
+        -- FIFO RED (5 bits)
+        WrData_red              :   out std_logic_vector(5 downto 0);
+        --FIFO_Full           :   out
+        --FIFO_Almost_Full    :   out
+        WrFIFO_red              :   out std_logic;
+
+        RrData_red              :   in  std_logic_vector(5 downto 0);
+        --FIFO_Empty          :   out
+        --FIFO_Almost_Empty   :   out
+        RdFIFO_red              :   out std_logic
     );
 end IP_CAM_Frame;
 
@@ -32,8 +55,9 @@ architecture  behav of IP_CAM_Frame is
 
     -- Buffer for GREEN2 and BLUE
     signal GREEN2   :   std_logic_vector(5 downto 0);
-    signal BLUE   :   std_logic_vector(5 downto 0);
-    
+    signal GREEN1   :   std_logic_vector(5 downto 0);
+    signal BLUE     :   std_logic_vector(4 downto 0);
+    signal RED      :   std_logic_vector(4 downto 0);
 
     -- Declare state names and state variable
     type STATE_TYPE IS (ST_IDLE,
@@ -85,23 +109,27 @@ begin
 
                 -- Data read is RED pixel
                 when ST_SAMPLE_RED =>
+                WrFIFO_green = '0';
                 -- Checks if new line
                 if Hsync = '0' then
                     state <= ST_WAIT_LINE_CHANGE_GB;
                 else            
                     -- Put data in RED_FIFO (5 bits only, need to truncate)
-                    -- code here
+                    WrData_red = CAM_data(4 downto 0);
+                    WrFIFO_red = '1';
                     state <= ST_SAMPLE_GREEN1;
                 end if;
 
                 -- Data read is GREEN1 pixel
                 when ST_SAMPLE_GREEN1 =>
+                WrFIFO_red = '0';
                 -- Checks if new line
                 if Hsync = '0' then
                     state <= ST_WAIT_LINE_CHANGE_GB;
                 else            
                     -- Put data in GREEN_FIFO (6 bits)
-                    -- code here
+                    WrData_green = CAM_data;
+                    WrFIFO_green = '0';
                     state <= ST_SAMPLE_RED;
                 end if;
 
@@ -130,14 +158,24 @@ begin
                 state <= ST_CONVERT;
 
                 -- Convert R G1 G2 & B data into 16-bits value
+                -- Get Green and Red values from FIFOs
                 when ST_CONVERT =>
-                GREEN2 <= (GREEN2 + CAM_data) / 2;
-                data(4 downto 0) <= -- FIFO_BLUE_POP;
+                RdFIFO_green = '1';
+                RdFIFO_red = '1';
+                
+                GREEN1  <=  RrData_green;
+                RED     <=  RrData_red;
+
+                GREEN2 <= (GREEN1 + GREEN2) / 2;
+                
+                data(4 downto 0) <= BLUE;
                 data(10 downto 5) <= GREEN2;
-                data(15 downto 11) <= -- FIFO_RED_POP;
+                data(15 downto 11) <= RED;
                 state <= ST_SEND;
 
                 when ST_SEND =>
+                RdFIFO_green = '0';
+                RdFIFO_red = '0';
                 -- Tell master unit a data is sent
                 new_data = '1';
 
