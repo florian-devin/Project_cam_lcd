@@ -1,5 +1,16 @@
+
+# quartus files
 *.sdc
 *.qpf
 *.qsf
 *.qdf
 *.qsf
+
+# modelsim files
+*.mpf
+*.mti
+*.qdb
+*.qpg
+*.qtl
+*vmake*
+*info*
