@@ -10,14 +10,15 @@ entity ip_cam_avslave is
 
         -- Internal interface (i.e. Avalon slave).
         address         : in  std_logic_vector(2 downto 0);
-        write           : in  std_logic;
-        read            : in  std_logic;
+        write_n         : in  std_logic;
+        read_n          : in  std_logic;
         writedata       : in  std_logic_vector(31 downto 0);
         readdata        : out std_logic_vector(31 downto 0);
+        cs_n            : in  std_logic;
 
         -- Internal interface (to master)
         start_addr      : out std_logic_vector(31 downto 0);
-        lenght          : out std_logic_vector(31 downto 0);
+        length          : out std_logic_vector(31 downto 0);
 
         -- Internal interface (to frame)
         capture_done    : in  std_logic;
@@ -40,7 +41,7 @@ begin
     begin
         if nReset = '0' then
             start_addr      <= (others => '0');
-            lenght          <= (others => '0');
+            length          <= (others => '0');
             acquisition     <= '0';
         elsif rising_edge(clk) then
             acquisition     <= CamStart and CamSnapshot;
@@ -51,7 +52,7 @@ begin
             end if;
             
             start_addr      <= CamAddr;
-            lenght          <= CamLength;
+            length          <= CamLength;
         end if;
 
     end process;
@@ -67,7 +68,7 @@ begin
             CamSnapshot  <= '0';
 
         elsif rising_edge(clk) then
-            if write = '1' then
+            if write_n = '0' and cs_n = '0' then
                 case address is
                     when "000" => CamAddr       <= writedata;
                     when "001" => CamLength     <= writedata;
@@ -86,7 +87,7 @@ begin
     begin
         if rising_edge(clk) then
             readdata <= (others => '0');
-            if read = '1' then
+            if read_n = '0' and cs_n = '0' then
                 case address is
                     when "000" => readdata      <= CamAddr;
                     when "001" => readdata      <= CamLength;

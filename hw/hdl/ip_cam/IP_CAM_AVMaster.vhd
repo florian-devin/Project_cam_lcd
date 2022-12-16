@@ -3,7 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 
-entity ip_cam_avslave is
+entity ip_cam_avmaster is
     port(
         clk             : in  std_logic;
         nReset          : in  std_logic;
@@ -19,7 +19,7 @@ entity ip_cam_avslave is
 
         -- Internal interface (to slave)
         start_addr      : in  std_logic_vector(31 downto 0);
-        lenght          : in  std_logic_vector(31 downto 0);
+        length          : in  std_logic_vector(31 downto 0);
 
         -- Internal interface (to frame)
         data            : in  std_logic_vector(31 downto 0);
@@ -27,9 +27,9 @@ entity ip_cam_avslave is
         new_frame       : in  std_logic;
         ack             : out std_logic
     );
-end ip_cam_avslave;
+end ip_cam_avmaster;
 
-architecture comp of ip_cam_avslave is
+architecture comp of ip_cam_avmaster is
 
     constant LDC_addr : std_logic_vector(31 downto 0) := (others => '0');  -- TODO : Change LDC addr
     -- State reg
