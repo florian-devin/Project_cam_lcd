@@ -39,8 +39,11 @@ architecture RTL of ReadMemCtrl is
     signal i_burstcount : std_logic_vector(3 downto 0)  := (others => '0');
     signal i_address    : std_logic_vector(31 downto 0) := (others => '0');
 
-    signal i_maxburstLength     : std_logic_vector(to_unsigned(DefaultBurstLength, burstcount'length)) -- Maximal nb of burst per burst read 
-    signal i_curPixel           : std_logic_vector(31 down to 0);               -- current pixel observed 
+    --signal i_maxburstLength     : std_logic_vector(to_unsigned(DefaultBurstLength, burstcount'length)) -- Maximal nb of burst per burst read 
+    signal num_StartAddress : integer;
+    signal num_BufferLength : integer;
+    signal num_curPixel     : integer := 0;                                    -- current pixel observed 
+    signal num_Pixelsleft   : integer := 0;        
 
 
 begin
@@ -73,7 +76,15 @@ begin
                         end if;
 
                     when GetPointer =>
+                        --pixels left to read = num_curPixel - num_BufferLength 
                         
+                        if (num_curPixel - num_BufferLength) >= 2*DefaultBurstLength    -- if pixels left to read > number of pixels in full burst  
+                            i_burstcount <= std_logic_vector(to_unsigned(DefaultBurstLength, i_burstcount'length)); -- burst count is full length
+                            num_curPixel <= num_curPixel + 2*DefaultBurstLength     -- current pixel is increased (2 pixels per bursts and DefaultBurstLength bursts)
+                        else 
+                            i_burstcount <= std_logic_vector(to_unsigned((num_curPixel-num_BufferLength+1)/2));
+            
+                        end if;
                         current_state <= SetRdSignals;
             
                     when SetRdSignals =>
@@ -106,11 +117,14 @@ begin
     		end if;
 	end process;
 
-    --Apply internal to external
-    -- d <= d_i
+    -- Convert inputs to integer
+    num_StartAddress <= to_integer(unsigned(StartAddress));
+    num_BufferLength <= to_integer(unsigned(BufferLength));
+    
+    -- Apply internal to external
     read          <= i_read;      
     burstcount    <= i_burstcount;
     address       <= i_address;   
 
-end ReadMemCtrl;
+end RTL;
 
