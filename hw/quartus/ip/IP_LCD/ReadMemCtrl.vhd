@@ -5,45 +5,52 @@ use ieee.numeric_std.all;
 
 entity ReadMemCtrl is
 	generic(
-        DefaultBurstLength : integer := 4
+        DefaultBurstLength : integer := 4                                       -- Constant: default length of burst read
     );
     port(
-		clk : in std_logic;
+		clk : in std_logic;                                                     
 		nReset : in std_logic;
 
 		--Inputs
-        waitrequest             : in std_logic;
-        MasterFIFO_empty         : in std_logic;   
-        GlobalFIFO_AlmostFull   : in std_logic;
-        StartAddress            : in std_logic_vector(31 downto 0);
-        BufferLength            : in std_logic_vector(31 downto 0);             -- Number of pixels to read in memory
+        waitrequest             : in std_logic;                                 -- Avalon Bus waitrequest
+        masterFIFO_empty        : in std_logic;                                 -- master FIFO fill info   
+        globalFIFO_AlmostFull   : in std_logic;                                 -- global FIFO fill info
+        startAddress            : in std_logic_vector(31 downto 0);             -- First address of the frame in memory
+        bufferLength            : in std_logic_vector(31 downto 0);             -- Number of pixels to read in memory
+        memWritten              : in std_logic;                                 -- Sync signal from IP_CAM
+        pixCounter              : in std_logic_vector(31 downto 0)              -- Nb of pixel read since last start of frame
+        
 
         --Outputs
-        read        : out std_logic;
-        burstcount  : out std_logic_vector(3 downto 0);
-        address     : out std_logic_vector(31 downto 0)            
-
+        read            : out std_logic;                                        -- Avalon Bus read 
+        burstcount      : out std_logic_vector(3 downto 0);                     -- Avalon Bus burst count (nb of consecutive reads)
+        address         : out std_logic_vector(31 downto 0);                    -- Avalon Bus address
+        memRed          : out std_logic;                                        -- Synchronization with IP_CAM, memory has been read completely by IP_LCD
+        nPixToCount     : out std_logic_vector(1 downto 0);                     -- Nb of pixel to read in the current burstread           
+        clrPixCounter   : out std_logic;                                        -- Pixel counter reset signal
+        clrBurstCounter : out std_logic                                         -- Burst counter reset signal
 	);
 end ReadMemCtrl;
 
 architecture RTL of ReadMemCtrl is
 
-	type states is (Idle, SyncGlobalFIFO, GetPointer, SetRdSignals, WaitWaitRequest, RealeaseRdSignals, SyncMasterFIFO);
+	type states is (Idle, CheckEOL, SyncGlobalFIFO, GetPointer, 
+                    SetRdSignals, WaitWaitRequest, RealeaseRdSignals,
+                    SyncMasterFIFO1, SyncMasterFIFO2, ResetPointer, 
+                    UpdateAddress, ClrMemRed);
+
 	signal current_state: states;
 	attribute enum_encoding: string;
 	attribute enum_encoding of states: type is "gray";
 
-	
     --internal signals
-    signal i_read       : std_logic                     := '0';
-    signal i_burstcount : std_logic_vector(3 downto 0)  := (others => '0');
-    signal i_address    : std_logic_vector(31 downto 0) := (others => '0');
-
-    --signal i_maxburstLength     : std_logic_vector(to_unsigned(DefaultBurstLength, burstcount'length)) -- Maximal nb of burst per burst read 
-    signal num_StartAddress : integer;
-    signal num_BufferLength : integer;
-    signal num_curPixel     : integer := 0;                                    -- current pixel observed 
-    signal num_Pixelsleft   : integer := 0;        
+    signal i_read               : std_logic                     := '0';
+    signal i_burstcount         : std_logic_vector(3 downto 0)  := (others => '0');
+    signal i_address            : std_logic_vector(31 downto 0) := (others => '0');
+    signal i_memRed             : std_logic                     := '0';
+    signal i_nPixToCount        : std_logic_vector(1 downto 0)  := (others => '0');            
+    signal i_clrPixCounter      : std_logic                     := '0';
+    signal i_clrBurstCounter    : std_logic                     := '0';
 
 
 begin
@@ -53,43 +60,59 @@ begin
 	begin
     		if nReset = '0' then
                 --reset values
-                i_read       <= '0';
-                i_burstcount <= (others => '0');
-                i_address    <= (others => '0');
+                i_read              <= '0';
+                i_burstcount        <= (others => '0');
+                i_address           <= (others => '0');
+                i_memRed            <= '0';
+                i_nPixToCount       <= (others => '0');            
+                i_clrPixCounter     <= '0';
+                i_clrBurstCounter   <= '0';
 
     		elsif rising_edge(clk) then
 
 				case current_state is
 		
                     when Idle =>
-                        if MasterFIFO_empty = '1' then
-                            current_state <= SyncGlobalFIFO;                    -- Master Fifo has been emptied, go to next state
+                        if memWritten == '1' then
+                            current_state <= CheckEOL                           -- New frame available in memory, start reading
                         else
-                            current_state <= Idle;                              -- Master Fifo still contains data, keep waiting
+                            current_state <= Idle;                              -- No frame available
                         end if;
-            
+                    
+                    when CheckEOL =>
+                        if pixCounter >= BufferLength  then
+                            current_state <= ResetPointer;                      -- Total nb of pixel read, reset pointer
+                        else
+                            current_state <= SyncGlobalFIFO;                    -- Total nb of pixels not reached, continue
+                        end if;
+
                     when SyncGlobalFIFO =>
-                        if GlobalFIFO_AlmostFull = '0' then
+                        if GlobalFIFO_AlmostFull == '0' then
                             current_state <= GetPointer;                        -- Global FIFO still has space for more data, create a read        
                         else
                             current_state <= SyncGlobalFIFO;                    -- Global FIFO is full, wait for LCD controller to empty it
                         end if;
 
                     when GetPointer =>
-                        --pixels left to read = num_curPixel - num_BufferLength 
-                        
-                        if (num_curPixel - num_BufferLength) >= 2*DefaultBurstLength    -- if pixels left to read > number of pixels in full burst  
+                        i_clrBurstCounter <= '1';                               -- burst Counter is cleared
+                        if (pixCounter - BufferLength) >= std_logic_vector(to_unsigned(2*DefaultBurstLength))    -- if pixels left to read > number of pixels in full burst  
                             i_burstcount <= std_logic_vector(to_unsigned(DefaultBurstLength, i_burstcount'length)); -- burst count is full length
-                            num_curPixel <= num_curPixel + 2*DefaultBurstLength     -- current pixel is increased (2 pixels per bursts and DefaultBurstLength bursts)
+                            i_nPixToCount <= std_logic_vector(to_unsigned(2*DefaultBurstLength, i_burstcount'length)); -- burst count is full length
                         else 
-                            i_burstcount <= std_logic_vector(to_unsigned((num_curPixel-num_BufferLength+1)/2));
-            
+                            i_burstcount <= (0 => '1', others => '0');
+                            if pixCounter - BufferLength > 1
+                                i_nPixToCount <= (1 => '1', others => '0');     -- Pix to count takes value 2
+                            else
+                                i_nPixToCount <= (0 => '1', others => '0');     -- Pix to count takes value 2
+                            end if;
                         end if;
                         current_state <= SetRdSignals;
             
                     when SetRdSignals =>
+                        i_clrBurstCounter <= '0';                               -- Stop clr of Burst counter
+                        i_read <= '1';                                          -- Assert read signal for new read
+                        current_state <= WaitWaitRequest;
             
-
                     when WaitWaitRequest =>
                         if waitrequest = '0' then
                             current_state <= RealeaseRdSignals;                 -- Avalon bus is available and has received read signals, move to deassert state
@@ -98,16 +121,37 @@ begin
                         end if;
 
                     when RealeaseRdSignals =>
-
-                        current_state <= SetRdSignals;
+                        i_read <= '0';                                          -- Release read signal
+                        current_state <= SyncMasterFIFO1;   
                     
-                    when SyncMasterFIFO =>
+                    when SyncMasterFIFO1 =>
                         if MasterFIFO_empty = '0' then
-                            current_state <= Idle;                              -- Master FIFO is not empty, at least one data has been sent, go to idle
+                            current_state <= UpdateAddress;                     -- Master FIFO is not empty, at least one data has been sent, go to idle
                         else
-                            current_state <= SyncMasterFIFO;                    -- Master FIFO still hasn't received ant data from read, wait
+                            current_state <= SyncMasterFIFO1;                   -- Master FIFO still hasn't received any data from read, wait
                         end if;
 
+                    when UpdateAddress =>
+                        i_address <= i_address + i_burstcount;                  -- Append address pointer
+                        current_state <= SyncMasterFIFO2;
+
+                    when SyncMasterFIFO2 =>
+                        if MasterFIFO_empty = '1' then
+                            current_state <= CheckEOL;                          -- Master FIFO has been read and emptied, go to next read                     
+                        else
+                            current_state <= SyncMasterFIFO2;                   -- Master FIFO operation not finished 
+                        end if;
+                    
+                    when ResetPointer =>
+                        i_address <= StartAddress;                              -- Reset address pointer to StartAddress
+                        i_clrPixCounter <= '1';                                 -- Clear pixel counter for new frame
+                        i_memRed <= '1';                                        -- Synchronize with IP_CAM                
+                        current_state <= ClrMemRed;
+                    
+                    when ClrMemRed =>
+                        i_clrPixCounter <= '0';                                 -- realase clear of pixel counter
+                        i_memRed <= '0';                                        -- release sync with IP_CAM signal
+                        current_state <= ClrMemRed;   
 
                     when others =>
                         current_state <= Idle;
@@ -116,15 +160,15 @@ begin
 
     		end if;
 	end process;
-
-    -- Convert inputs to integer
-    num_StartAddress <= to_integer(unsigned(StartAddress));
-    num_BufferLength <= to_integer(unsigned(BufferLength));
     
     -- Apply internal to external
-    read          <= i_read;      
-    burstcount    <= i_burstcount;
-    address       <= i_address;   
+    read            <= i_read;      
+    burstcount      <= i_burstcount;
+    address         <= i_address;
+    mem_red         <= i_memRed;             
+    nPixToCount     <= i_nPixToCount;                    
+    clrPixCounter   <= i_clrPixCounter;      
+    clrBurstCounter <= i_clrBurstCounter;       
 
 end RTL;
 
