@@ -18,7 +18,7 @@ entity ReadMemCtrl is
         startAddress            : in std_logic_vector(31 downto 0);             -- First address of the frame in memory
         bufferLength            : in std_logic_vector(31 downto 0);             -- Number of pixels to read in memory
         memWritten              : in std_logic;                                 -- Sync signal from IP_CAM
-        pixCounter              : in std_logic_vector(31 downto 0)              -- Nb of pixel read since last start of frame
+        pixCounter              : in std_logic_vector(31 downto 0);              -- Nb of pixel read since last start of frame
         
 
         --Outputs
@@ -73,8 +73,8 @@ begin
 				case current_state is
 		
                     when Idle =>
-                        if memWritten == '1' then
-                            current_state <= CheckEOL                           -- New frame available in memory, start reading
+                        if memWritten = '1' then
+                            current_state <= CheckEOL;                           -- New frame available in memory, start reading
                         else
                             current_state <= Idle;                              -- No frame available
                         end if;
@@ -87,7 +87,7 @@ begin
                         end if;
 
                     when SyncGlobalFIFO =>
-                        if GlobalFIFO_AlmostFull == '0' then
+                        if GlobalFIFO_AlmostFull = '0' then
                             current_state <= GetPointer;                        -- Global FIFO still has space for more data, create a read        
                         else
                             current_state <= SyncGlobalFIFO;                    -- Global FIFO is full, wait for LCD controller to empty it
@@ -95,15 +95,15 @@ begin
 
                     when GetPointer =>
                         i_clrBurstCounter <= '1';                               -- burst Counter is cleared
-                        if (pixCounter - BufferLength) >= std_logic_vector(to_unsigned(2*DefaultBurstLength))    -- if pixels left to read > number of pixels in full burst  
+                        if unsigned(pixCounter) - unsigned(BufferLength) >= to_unsigned(2*DefaultBurstLength, i_burstcount'length) then   -- if pixels left to read > number of pixels in full burst  
                             i_burstcount <= std_logic_vector(to_unsigned(DefaultBurstLength, i_burstcount'length)); -- burst count is full length
                             i_nPixToCount <= std_logic_vector(to_unsigned(2*DefaultBurstLength, i_burstcount'length)); -- burst count is full length
                         else 
                             i_burstcount <= (0 => '1', others => '0');
-                            if pixCounter - BufferLength > 1
-                                i_nPixToCount <= (1 => '1', others => '0');     -- Pix to count takes value 2
+                            if unsigned(pixCounter) - unsigned(BufferLength) > 1 then
+                                i_nPixToCount <= "10";     -- Pix to count takes value 2
                             else
-                                i_nPixToCount <= (0 => '1', others => '0');     -- Pix to count takes value 2
+                                i_nPixToCount <= "01";     -- Pix to count takes value 2
                             end if;
                         end if;
                         current_state <= SetRdSignals;
@@ -132,7 +132,7 @@ begin
                         end if;
 
                     when UpdateAddress =>
-                        i_address <= i_address + i_burstcount;                  -- Append address pointer
+                        i_address <= std_logic_vector(unsigned(i_address) + unsigned(i_burstcount));                  -- Append address pointer
                         current_state <= SyncMasterFIFO2;
 
                     when SyncMasterFIFO2 =>
@@ -165,7 +165,7 @@ begin
     read            <= i_read;      
     burstcount      <= i_burstcount;
     address         <= i_address;
-    mem_red         <= i_memRed;             
+    memRed          <= i_memRed;             
     nPixToCount     <= i_nPixToCount;                    
     clrPixCounter   <= i_clrPixCounter;      
     clrBurstCounter <= i_clrBurstCounter;       
