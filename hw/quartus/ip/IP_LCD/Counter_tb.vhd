@@ -13,13 +13,13 @@ architecture test of Counter_tb is
 	constant TIME_DELTA : time := 10*CLK_PERIOD;
 
     --width of counter
-    constant CNT_WIDTH : integer := 4;
+    constant CNT_WIDTH : integer := 10;
 
 	signal sim_finished : boolean := false;
 
 	signal clk      : std_logic;
 	signal nReset   : std_logic;
-    signal trigger : std_logic;
+    signal trigger : std_logic :='0';
     signal clr     : std_logic;
     signal cnt     : std_logic_vector(CNT_WIDTH-1 downto 0);
 
@@ -31,7 +31,7 @@ begin
 	-- Instantiate DUT
 	dut : entity work.Counter
 	generic map(
-        cnt_width  => 4
+        cnt_width  => CNT_WIDTH
     )
 
     port map(
@@ -91,7 +91,7 @@ begin
 	
 	-- Attribute default values
 		nReset 	<= '1';
-        trigger <= '0';
+        --trigger <= '0';
         clr     <= '0';
         
 		wait until rising_edge(clk);
@@ -99,8 +99,16 @@ begin
 	-- Reset the module
 		async_reset;
 		
-		wait for 50*TIME_DELTA;
-	
+		wait for 10*TIME_DELTA;
+    
+        clr <= '1';
+
+        wait for TIME_DELTA;
+
+        clr <='0';
+
+        wait for 10*TIME_DELTA;
+        sim_finished <= true;
 		wait;
 	
 	end process simulation;
