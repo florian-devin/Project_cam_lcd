@@ -5,7 +5,7 @@ use ieee.numeric_std.all;
 
 entity ReadMemCtrl is
 	generic(
-        DefaultBurstLength : integer := 4                                       -- Constant: default length of burst read
+        DefaultBurstLength : integer := 4           -- max 15 or else change burstcount width                             -- Constant: default length of burst read
     );
     port(
 		clk : in std_logic;                                                     
@@ -97,7 +97,7 @@ begin
                         i_clrBurstCounter <= '1';                               -- burst Counter is cleared
                         if unsigned(pixCounter) - unsigned(BufferLength) >= to_unsigned(2*DefaultBurstLength, i_burstcount'length) then   -- if pixels left to read > number of pixels in full burst  
                             i_burstcount <= std_logic_vector(to_unsigned(DefaultBurstLength, i_burstcount'length)); -- burst count is full length
-                            i_nPixToCount <= std_logic_vector(to_unsigned(2*DefaultBurstLength, i_burstcount'length)); -- burst count is full length
+                            i_nPixToCount <= std_logic_vector(to_unsigned(2*DefaultBurstLength, i_burstcount'length)); -- count full length pixels
                         else 
                             i_burstcount <= (0 => '1', others => '0');
                             if unsigned(pixCounter) - unsigned(BufferLength) > 1 then
