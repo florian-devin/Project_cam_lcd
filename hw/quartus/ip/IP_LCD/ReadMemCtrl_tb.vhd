@@ -41,7 +41,7 @@ architecture test of ReadMemCtrl_tb is
 
 
 begin
-²
+
 
 	-- Instantiate DUT
 	dut : entity work.SlaveInterface

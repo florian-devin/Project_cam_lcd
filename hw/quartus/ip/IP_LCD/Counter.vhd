@@ -8,24 +8,32 @@ entity counter is
     );
 
     Port ( 
-        nReset     : in std_logic;
+        nReset  : in std_logic;
         trigger : in std_logic;
-        o       : out std_logic_vector(cnt_width-1 downto 0));
+        clr     : in std_logic;
+        cnt     : out std_logic_vector(cnt_width-1 downto 0)
+    );
+        
 end counter;
 
 architecture count_arch of counter is
-   signal i_o : std_logic_vector(cnt_width-1 downto 0);
+   signal i_cnt : std_logic_vector(cnt_width-1 downto 0);
 
 begin
-    process(nReset, trigger)
+    process(nReset, clr, trigger)
         begin
-            if (rst = '0') then 
-                count <= (others => '0');
+            if (nReset = '0') then 
+                i_cnt <= (others => '0');
+            
+            elsif (clr = '1') then
+                i_cnt <= (others => '0');
+
             elsif (rising_edge(trigger)) then 
-                i_o <= i_o + 1;
+                i_cnt <= std_logic_vector(unsigned(i_cnt) + 1);
+
             end if;
         end process;
         
-    o <= count;
+    cnt <= i_cnt;
 
 end count_arch;
