@@ -11,11 +11,9 @@ architecture test of framegen_tb is
 	signal clk : std_logic;
 	signal nReset : std_logic;
 
-    signal config : std_logic_vector(15 downto 0);
-    signal data : std_logic_vector(15 downto 0);
-    signal FifoEmpty : std_logic;
-    signal pendingCfg : std_logic;
-    signal D_CX_IN : std_logic;
+    signal dataSeq : std_logic_vector(15 downto 0);
+    signal framegenEnabled : std_logic;
+    signal D_CX_Seq : std_logic;
 
     signal frame_finished : std_logic;
     signal CSX : std_logic;
@@ -31,11 +29,9 @@ begin
 	dut : entity work.framegen
 	port map(clk => clk,
 		nReset => nReset,
-		config => config,
-        data => data,
-        FifoEmpty => FifoEmpty,
-        pendingCfg => pendingCfg,
-        D_CX_IN => D_CX_IN,
+        dataSeq => dataSeq,
+        framegenEnabled => framegenEnabled,
+        D_CX_Seq => D_CX_Seq,
         frame_finished => frame_finished,
         CSX => CSX,
         D_CX => D_CX,
@@ -53,27 +49,14 @@ begin
 
 	simulation : process
 	begin
-		nReset <= '1';
-        config <= "0000000000000000";
-        data <= "0000000000000000";
-        FifoEmpty <= '1';
-        pendingCfg <= '0';
-        D_CX_IN <= '0';
+		nReset <= '0';
+        dataSeq <= "0000000000000000";
+        framegenEnabled <= '0';
+        D_CX_Seq <= '0';
 
-        wait for 100 ns;
-        config <= "1110011000101010";
-        data <= "0101010101110101";
+        wait for 20 ns;
+        nReset <= '1';
 
-        wait for 50 ns;
-        pendingCfg <= '1';
-        FifoEmpty <= '0';
-        D_CX_IN <= '1';
-
-        wait for 100 ns;
-        pendingCfg <= '0';
-
-        wait for 100 ns;
-        FifoEmpty <= '1';
 		wait;
 	end process;
 	

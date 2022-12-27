@@ -8,11 +8,9 @@ entity framegen is
 		clk : in std_logic;
 		nReset : in std_logic;
 
-		config : in std_logic_vector(15 downto 0);
-        data : in std_logic_vector(15 downto 0);
-        FifoEmpty : in std_logic;
-        pendingCfg : in std_logic;
-        D_CX_IN : in std_logic;
+		dataSeq : in std_logic_vector(15 downto 0);
+        framegenEnabled : in std_logic;
+        D_CX_Seq : in std_logic;
 		
         frame_finished : out std_logic;
         CSX : out std_logic;
@@ -61,21 +59,16 @@ begin
                     D_CX_i <= '0';
                     WRX_i <= '0';
                     RDX_i <= '1';
-                    --D_i <= (others => '0');
                     D_memorized <= (others => '0');
-					if pendingCfg = '1' then
+					if framegenEnabled = '1' then
                         current_state <= send1;
-                        D_memorized <= config;
-                        frame_finished_i <= '0';
-                    elsif FifoEmpty = '0' then -- pendingCfg = '0' and FifoEmpty = '0'
-                        current_state <= send1;
-                        D_memorized <= data;
+                        D_memorized <= dataSeq;
                         frame_finished_i <= '0';
 					end if;
 		
 				when send1 =>
 					CSX_i <= '0';
-                    D_CX_i <= D_CX_IN;
+                    D_CX_i <= D_CX_Seq;
                     WRX_i <= '0';
                     D_i <= D_memorized;
                     current_state <= send2;
