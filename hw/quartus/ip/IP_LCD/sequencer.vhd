@@ -25,7 +25,7 @@ end sequencer;
 
 architecture RTL of sequencer is
 
-	type states is (idle, sendData, waitFramegen);
+	type states is (idle, sendData, waitFramegen, tempoData);
 	signal current_state: states;
 	attribute enum_encoding: string;
 	attribute enum_encoding of states: type is "gray";
@@ -73,6 +73,9 @@ begin
                     dataSeq_i <= RdData;
                     framegenEnabled_i <= '1';
                     D_CX_Seq_i <= '1';
+                    current_state <= tempoData;
+
+                when tempoData =>
                     current_state <= waitFramegen;
 
                 when waitFramegen =>

@@ -34,9 +34,8 @@ architecture RTL of framegen is
     signal WRX_i : std_logic := '0';
     signal RDX_i : std_logic := '0';
     signal D_i : std_logic_vector(15 downto 0) := (others => '0');
-    signal D_memorized : std_logic_vector(15 downto 0) := (others => '0');
-begin
 
+begin
 
 	process(clk, nReset, current_state)
 	begin
@@ -59,10 +58,9 @@ begin
                     D_CX_i <= '0';
                     WRX_i <= '0';
                     RDX_i <= '1';
-                    D_memorized <= (others => '0');
 					if framegenEnabled = '1' then
                         current_state <= send1;
-                        D_memorized <= dataSeq;
+                        D_i <= dataSeq;
                         frame_finished_i <= '0';
 					end if;
 		
@@ -70,7 +68,6 @@ begin
 					CSX_i <= '0';
                     D_CX_i <= D_CX_Seq;
                     WRX_i <= '0';
-                    D_i <= D_memorized;
                     current_state <= send2;
 
                 when send2 =>

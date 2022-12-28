@@ -29,7 +29,7 @@ architecture test of lcd_controller_tb is
 
 begin
 
-	dut : entity work.LCDController
+	dut : entity work.lcd_controller
 	port map(clk => clk,
 		nReset => nReset,
         updateCmd => updateCmd,
@@ -60,11 +60,31 @@ begin
         regCmd <= (others => '0');
         updateParam <= '0';
         regParam <= (others => '0');
-        FifoEmpty <= '0';
+        FifoEmpty <= '1';
         RdData <= (others => '0');
 
         wait for 20 ns;
         nReset <= '1';
+
+        wait for 20 ns;
+        regCmd <= "0000110000010001";
+        regParam <= "0011110000111001";
+        RdData <= "0101010101010101";
+        updateCmd <= '1';
+        updateParam <= '1';
+        FifoEmpty <= '0';
+
+        wait for 30 ns;
+        updateCmd <= '0';
+
+        wait for 200 ns;
+        updateParam <= '0';
+
+        wait for 10 ns;
+        FifoEmpty <= '1';
+
+        wait for 200 ns;
+        FifoEmpty <= '0';
 
 		wait;
 	end process;
