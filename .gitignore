@@ -14,3 +14,8 @@
 *.qtl
 *vmake*
 *info*
+
+hw/quartus/*
+
+hw/modelsim/IP_CAM/*wlf*
+

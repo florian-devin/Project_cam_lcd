@@ -37,13 +37,21 @@ architecture comp of ip_cam_avslave is
 
 begin
 
-    process(clk, nReset)
+    process(clk, nReset, capture_done)
     begin
         if nReset = '0' then
             start_addr      <= (others => '0');
             length          <= (others => '0');
             acquisition     <= '0';
+            CamAddr         <= (others => '0');
+            CamLength       <= (others => '0');
+            CamStatus       <= '0';
+            CamStart        <= '0';
+            CamSnapshot     <= '0';
+            CamStop         <= '0';
+
         elsif rising_edge(clk) then
+            readdata        <= (others => '0');
             acquisition     <= CamStart and CamSnapshot;
             CamStatus       <= capture_done;
 
@@ -53,21 +61,7 @@ begin
             
             start_addr      <= CamAddr;
             length          <= CamLength;
-        end if;
 
-    end process;
-
-    -- Avalon slave write to registers.
-    process(clk, nReset)
-    begin
-        if nReset = '0' then
-            CamAddr      <= (others => '0');
-            CamLength    <= (others => '0');
-            CamStatus    <= '0';
-            CamStart     <= '0';
-            CamSnapshot  <= '0';
-
-        elsif rising_edge(clk) then
             if write_n = '0' and cs_n = '0' then
                 case address is
                     when "000" => CamAddr       <= writedata;
@@ -79,22 +73,19 @@ begin
                     when others => null;
                 end case;
             end if;
-        end if;
-    end process;
 
-        -- Avalon slave read from registers.
-    process(clk)
-    begin
-        if rising_edge(clk) then
-            readdata <= (others => '0');
+            
             if read_n = '0' and cs_n = '0' then
                 case address is
                     when "000" => readdata      <= CamAddr;
                     when "001" => readdata      <= CamLength;
                     when "010" => readdata(0)   <= CamStatus;
+                                  readdata(31 downto 1) <= x"0000000" & "000";
                     when others => null;
                 end case;
             end if;
         end if;
+
     end process;
+
 end comp;

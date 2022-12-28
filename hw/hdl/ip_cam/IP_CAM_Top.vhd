@@ -1,6 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
+
 entity IP_CAM_Top is 
     port (
         Clk             : in  std_logic;
@@ -48,7 +49,7 @@ architecture rtl of IP_CAM_Top is
     signal ack          : std_logic;
 
 begin
-    IP_CAM_AVSlave : entity work.ip_cam_avslave(rtl)
+    IP_CAM_AVSlave : entity work.ip_cam_avslave
         port map(
             clk             => Clk,
             nReset          => nReset,
@@ -71,7 +72,7 @@ begin
 
         );
 
-    IP_CAM_AVMaster : entity work.ip_cam_avmaster(rtl)
+    IP_CAM_AVMaster : entity work.ip_cam_avmaster
         port map(
             clk             => Clk,
             nReset          => nReset,
