@@ -17,10 +17,11 @@ architecture test of ReadMemCtrl_tb is
 	signal nReset   : std_logic;
 
 	signal sim_finished : boolean := false;
+
 	
     -- Inputs
     signal waitrequest              : std_logic;                                 -- Avalon Bus waitrequest
-    signal masterFIFO_empty         : std_logic;                                 -- master FIFO fill info   
+    signal MasterFIFO_empty         : std_logic;                                 -- master FIFO fill info   
     signal globalFIFO_AlmostFull    : std_logic;                                 -- global FIFO fill info
     signal startAddress             : std_logic_vector(31 downto 0);             -- First address of the frame in memory
     signal bufferLength             : std_logic_vector(31 downto 0);             -- Number of pixels to read in memory
@@ -33,9 +34,9 @@ architecture test of ReadMemCtrl_tb is
     signal burstcount      : std_logic_vector(3 downto 0);                     -- Avalon Bus burst count (nb of consecutive reads)
     signal address         : std_logic_vector(31 downto 0);                    -- Avalon Bus address
     signal memRed          : std_logic;                                        -- Synchronization with IP_CAM, memory has been read completely by IP_LCD
-    signal nPixToCount     : std_logic_vector(1 downto 0);                     -- Nb of pixel to read in the current burstread           
+    signal nPixToCount     : std_logic_vector(7 downto 0);                     -- Nb of pixel to read in the current burstread           
     signal clrPixCounter   : std_logic;                                        -- Pixel counter reset signal
-    signal clrBurstCounter : std_logic                                         -- Burst counter reset signal
+    signal clrBurstCounter : std_logic;                                         -- Burst counter reset signal
 	
 
 
@@ -44,14 +45,17 @@ begin
 
 
 	-- Instantiate DUT
-	dut : entity work.SlaveInterface
+	dut : entity work.ReadMemCtrl
 	generic map(
-        DefaultBurstLength  => 4
+        DefaultBurstLength  => x"4"
     )
 
     port map(
+		clk 	=> clk,
+		nReset 	=> nReset,
+
         waitrequest           => waitrequest,          
-        masterFIFO_empty      => masterFIFO_empty,     
+        MasterFIFO_empty      => MasterFIFO_empty,     
         globalFIFO_AlmostFull => globalFIFO_AlmostFull,
         startAddress          => startAddress,         
         bufferLength          => bufferLength,         
@@ -95,161 +99,60 @@ begin
 	end procedure async_reset;
 	
 -- Avalon Bus read test procedure
-	procedure IO_read(constant p_addr : in natural;
-						constant res_expected : in natural) is
-		variable res : natural;
+	procedure rdloop is
 	begin
 		wait until rising_edge(clk);
-		
-		-- Set address
-		address <= std_logic_vector(to_unsigned(p_addr, address'length));
-		wait until rising_edge(clk);
-		
-		-- Enable read
-		read <= '1';
 
+		--Check EOL, pixCounter <= bufferlength
+		--SyncGlobalFIFO, globalFIFO_AlmostFull=0
+		--GetPointer (check burstCount and pixtocount)
+		--SetRdSignals read high and burst counter to 0
+		--WaitWaitRequest
+		--RealeaseRdSignals read goes low
+		--SyncMasterFIFO1, master fifo empty so update address
+		--Update address, address should be increased by burstcount
+		wait for 2*TIME_DELTA;
+		--SyncMasterFIFO2
+		MasterFIFO_empty <= '1';
+		pixCounter <= std_logic_vector(unsigned(pixCounter) + unsigned(nPixToCount)); 
 		wait until rising_edge(clk);
-		wait until rising_edge(clk);
+		MasterFIFO_empty <= '0';
+		wait for CLK_PERIOD/2;
+		wait until rising_edge(clk); 
 		
-
-		-- Check output
-		res := to_integer(unsigned(readdata));
-		assert res = res_expected
-		report  "Unexpected result: " &
-				"address = " & integer'image(p_addr) & "; " & 
-				"readdata = " & integer'image(res) & "; " &
-				"readdata_expected = " & integer'image(res_expected)
-		severity error;
-		
+	end procedure rdloop;
 	
-		-- Disable read	
-		read <='0';
-		--wait until rising_edge(clk);
-		
-	end procedure IO_read;
-	
--- Avalon Bus write test procedure
-	procedure IO_write(constant p_addr : in natural;
-						constant p_wrdata : in natural;
-						constant res_expected : in natural) is
-		variable res : natural;
-	begin
-		wait until rising_edge(clk);
-		
-		-- Set writedata
-		writedata <= std_logic_vector(to_unsigned(p_wrdata, writedata'length));	
-		-- Set address
-		address <= std_logic_vector(to_unsigned(p_addr, address'length));
-		
-		wait until rising_edge(clk);
-		
-		-- Enable write
-		write <= '1';
-		
-		wait until rising_edge(clk);	--wait for 2 clk cycles as in quartus specification
-		wait until rising_edge(clk);
-		
-		-- Check output
-		case p_addr is 
-			when 0 	=> res := to_integer(unsigned(data));
-			--when "01" => DO NOTHING
-			when 2 	=> res := to_integer(unsigned'("" & frame_rst_rq));
-			when others => null;
-		end case;
-		
-		assert res = res_expected
-		report  "Unexpected result: " &
-				"address = " & integer'image(p_addr) & "; " & 
-				"readdata = " & integer'image(res) & "; " &
-				"readdata_expected = " & integer'image(res_expected)
-		severity error;
-		
-		
-		-- Disable read	
-		write <='0';
-		--wait until rising_edge(clk);
-	
-	end procedure IO_write;
 	
 	
 	begin
 	
 	-- Attribute default values
-		nReset 			<= '1';
-		address 		<= (others =>'0');
-		write 			<= '0';
-		read 			<= '0';
-		writedata 		<= (others =>'0');
-		--readdata 		<= (others =>'0');
-		tx_ready 		<= '0';
-		--data 			<= (others =>'0');
-		--frame_rst_rq 	<= '0';
+        waitrequest             <= '0';
+        MasterFIFO_empty        <= '0';
+        globalFIFO_AlmostFull   <= '0';
+        startAddress            <= (others => '0');
+        bufferLength            <= x"00000003";
+        memWritten              <= '0';
+        pixCounter              <= x"00000000";
+        
 		wait until rising_edge(clk);
 		
 	-- Reset the module
 		async_reset;
 		
 		wait for TIME_DELTA;
-		
-		-- NZR encoder is ready 
-		tx_ready <='1';		
-		
-		-- read flag 
-		IO_read(1, 1);								-- expect 1 bc tx_ready = 1
-		
-		-- write data
-		IO_write(0, 16#0FAAAAAA#, 16#AAAAAA#);		-- write data
-		
-		tx_ready <= '0';							-- NZR encoder drives tx_ready low				
-		wait for TIME_DELTA;					-- new_frame signal triggers NZR encoder
+				
+		--memwritten pulses
+		memWritten <= '1';
+		wait until rising_edge(clk);
+		memWritten <= '0';
+		wait until rising_edge(clk);
 
-		IO_read(1, 0);								-- MCU polls flag but line is occupied by NZR encoder
-		
-		wait for TIME_FRAME24;						-- NZR encoder sends the frame
-		wait for TIME_FRAME24;
-		
-		
-		tx_ready <= '1';							-- Frame Tx has ended, tx_ready =1
-		
-		-- NZR encoder sends NbLED frames
-		-- ...
-		
-		-- try to send the same data
-		
-		-- read flag 
-		IO_read(1, 1);								-- expect 1 bc tx_ready = 1
-		
-		-- write data
-		IO_write(0, 16#0FAAAAAA#, 16#AAAAAA#);		-- write data
-		tx_ready <= '0';							-- NZR encoder drives tx_ready low
-		
-		wait for TIME_DELTA;					-- new_frame signal triggers NZR encoder
-		
-		
-		IO_read(1, 0);								-- MCU polls flag but line is occupied by NZR encoder
-		
-		wait for TIME_FRAME24;						-- NZR encoder sends the frame
-		
-		tx_ready <= '1';							-- Frame Tx has ended, tx_ready =1
-		
-		
-		--...
-		
-		IO_read(1, 1);								-- MCU polls flag, line free
+		rdloop;
+		rdloop;
 
-		IO_write(2, 16#0000000F#, 1);				-- WR requests
-		tx_ready <= '0';							-- NZR encoder drives tx_ready low		
-		
-		wait for TIME_DELTA;-- until (new_frame = '1');					-- new_frame signal triggers NZR encoder
-		
-		IO_read(2, 16#0000000F#);					-- RD requests
-		
-		IO_write(2, 16#00000000#, 0);
-		
-		wait for TIME_RST_RQ;						-- NZR encoder sends the reset frame
+		wait for 2*TIME_DELTA;
 
-		tx_ready <= '1'; 							-- NZR encoder has finished the tx	
-		
 		-- Indicate end of tb
 		sim_finished <= true;
 		

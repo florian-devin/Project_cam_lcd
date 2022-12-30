@@ -5,7 +5,7 @@
 
 entity ReadMemCtrl is
 	generic(
-        DefaultBurstLength : integer := 4           -- max 15 or else change burstcount width                             -- Constant: default length of burst read
+        DefaultBurstLength : unsigned(3 downto 0) := x"4"           -- max 15 or else change burstcount width                             -- Constant: default length of burst read
     );
     port(
 		clk : in std_logic;                                                     
@@ -26,7 +26,7 @@ entity ReadMemCtrl is
         burstcount      : out std_logic_vector(3 downto 0);                     -- Avalon Bus burst count (nb of consecutive reads)
         address         : out std_logic_vector(31 downto 0);                    -- Avalon Bus address
         memRed          : out std_logic;                                        -- Synchronization with IP_CAM, memory has been read completely by IP_LCD
-        nPixToCount     : out std_logic_vector(1 downto 0);                     -- Nb of pixel to read in the current burstread           
+        nPixToCount     : out std_logic_vector(7 downto 0);                     -- Nb of pixel to read in the current burstread           
         clrPixCounter   : out std_logic;                                        -- Pixel counter reset signal
         clrBurstCounter : out std_logic                                         -- Burst counter reset signal
 	);
@@ -48,10 +48,10 @@ architecture RTL of ReadMemCtrl is
     signal i_burstcount         : std_logic_vector(3 downto 0)  := (others => '0');
     signal i_address            : std_logic_vector(31 downto 0) := (others => '0');
     signal i_memRed             : std_logic                     := '0';
-    signal i_nPixToCount        : std_logic_vector(1 downto 0)  := (others => '0');            
+    signal i_nPixToCount        : std_logic_vector(7 downto 0)  := (others => '0');            
     signal i_clrPixCounter      : std_logic                     := '0';
     signal i_clrBurstCounter    : std_logic                     := '0';
-
+    signal i_DefaultBurstLength : unsigned(3 downto 0)          := DefaultBurstLength;
 
 begin
 
@@ -67,6 +67,7 @@ begin
                 i_nPixToCount       <= (others => '0');            
                 i_clrPixCounter     <= '0';
                 i_clrBurstCounter   <= '0';
+                i_DefaultBurstLength<= DefaultBurstLength;
 
     		elsif rising_edge(clk) then
 
@@ -95,15 +96,15 @@ begin
 
                     when GetPointer =>
                         i_clrBurstCounter <= '1';                               -- burst Counter is cleared
-                        if unsigned(pixCounter) - unsigned(BufferLength) >= to_unsigned(2*DefaultBurstLength, i_burstcount'length) then   -- if pixels left to read > number of pixels in full burst  
-                            i_burstcount <= std_logic_vector(to_unsigned(DefaultBurstLength, i_burstcount'length)); -- burst count is full length
-                            i_nPixToCount <= std_logic_vector(to_unsigned(2*DefaultBurstLength, i_burstcount'length)); -- count full length pixels
+                        if unsigned(BufferLength) - unsigned(pixCounter)  >= 2*DefaultBurstLength then   -- if pixels left to read > number of pixels in full burst  
+                            i_burstcount <= std_logic_vector(DefaultBurstLength); -- burst count is full length
+                            i_nPixToCount <= std_logic_vector(2*DefaultBurstLength); -- count full length pixels
                         else 
                             i_burstcount <= (0 => '1', others => '0');
-                            if unsigned(pixCounter) - unsigned(BufferLength) > 1 then
-                                i_nPixToCount <= "10";     -- Pix to count takes value 2
+                            if unsigned(BufferLength) - unsigned(pixCounter) > 1 then
+                                i_nPixToCount <= x"02";     -- Pix to count takes value 2
                             else
-                                i_nPixToCount <= "01";     -- Pix to count takes value 2
+                                i_nPixToCount <= x"01";     -- Pix to count takes value 2
                             end if;
                         end if;
                         current_state <= SetRdSignals;
@@ -151,7 +152,7 @@ begin
                     when ClrMemRed =>
                         i_clrPixCounter <= '0';                                 -- realase clear of pixel counter
                         i_memRed <= '0';                                        -- release sync with IP_CAM signal
-                        current_state <= ClrMemRed;   
+                        current_state <= Idle;   
 
                     when others =>
                         current_state <= Idle;
