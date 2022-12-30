@@ -12,7 +12,7 @@ entity RdWrSeq is
         AM_read         : in std_logic;                                         -- Avalon Master read request
         burstcount      : in std_logic_vector(3 downto 0);                      -- Avalon Bus burst count for this burst read(nb of consecutive reads)
         BurstCounter    : in std_logic_vector(3 downto 0);                      -- Avalon Bus bursts counted in the current burstread 
-        nPixToCount     : in std_logic_vector(1 downto 0);                      -- Nb of pixel to read in the current burstread
+        nPixToCount     : in std_logic_vector(7 downto 0);                      -- Nb of pixel to read in the current burstread
         mFIFO_q         : in std_logic_vector(15 downto 0);                     -- Output of the master FIFO
         mFIFO_rdempty   : in std_logic;                                         -- read empty status from master FIFO
         gFIFO_wrfull    : in std_logic;                                         -- write full status from global FIFO
@@ -36,7 +36,7 @@ architecture RTL of RdWrSeq is
 	attribute enum_encoding of states: type is "gray";
 
     -- internal variables
-    signal curPix           : unsigned(1 downto 0) := (others => '0');                                  -- Pixels left to transfer
+    signal curPix           : unsigned(7 downto 0) := (others => '0');                                  -- Pixels left to transfer
     signal curBurstcount    : unsigned(3 downto 0) := (others => '0');                                  -- Bursts left to transfer
 
     -- internal signals
