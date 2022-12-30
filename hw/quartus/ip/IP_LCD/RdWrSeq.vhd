@@ -9,15 +9,15 @@ entity RdWrSeq is
 		nReset : in std_logic;
 
 		--Inputs
-
-        cur_burstcount  : in std_logic_vector(3 downto 0);                      -- Avalon Bus burst count for this burst read(nb of consecutive reads)
+        AM_read         : in std_logic;                                         -- Avalon Master read request
+        burstcount      : in std_logic_vector(3 downto 0);                      -- Avalon Bus burst count for this burst read(nb of consecutive reads)
         BurstCounter    : in std_logic_vector(3 downto 0);                      -- Avalon Bus bursts counted in the current burstread 
         nPixToCount     : in std_logic_vector(1 downto 0);                      -- Nb of pixel to read in the current burstread
         lFIFO_q         : in std_logic_vector(15 downto 0);                     -- Output of the local FIFO
         lFIFO_rdempty   : in std_logic;                                         -- read empty status from local FIFO
+        gFIFO_wrfull    : in std_logic;                                         -- write full status from global FIFO
 
         --Outputs
-        
         gFIFO_wrreq : out std_logic;                                            -- Write request to global FIFO
         gFIFO_data  : out std_logic_vector(15 downto 0);                        -- Data to push in global FIFO
         lFIFO_rdreq : out std_logic                                             -- Read request to local FIFO
@@ -26,23 +26,23 @@ end RdWrSeq;
 
 architecture RTL of RdWrSeq is
 
-	type states is (Idle, CheckEOL, SyncGlobalFIFO, GetPointer, 
-                    SetRdSignals, WaitWaitRequest, RealeaseRdSignals,
-                    SyncMasterFIFO1, SyncMasterFIFO2, ResetPointer, 
-                    UpdateAddress, ClrMemRed);
+	type states is (Idle, Init, waitBurstCompletion, rise_lFIFO_rdreq, fall_lFIFO_rdreq, 
+                    check_gFIFO_wrfull, rise_gFIFO_wrreq, fall_gFIFO_wrreq,
+                    check_curpix, check_lFIFO_rdempty, rise_lFIFO_rdreq_del, 
+                    fall_lFIFO_rdreq_del);
 
 	signal current_state: states;
 	attribute enum_encoding: string;
 	attribute enum_encoding of states: type is "gray";
 
-    --internal signals
-    signal i_read               : std_logic                     := '0';
-    signal i_burstcount         : std_logic_vector(3 downto 0)  := (others => '0');
-    signal i_address            : std_logic_vector(31 downto 0) := (others => '0');
-    signal i_memRed             : std_logic                     := '0';
-    signal i_nPixToCount        : std_logic_vector(1 downto 0)  := (others => '0');            
-    signal i_clrPixCounter      : std_logic                     := '0';
-    signal i_clrBurstCounter    : std_logic                     := '0';
+    -- internal variables
+    signal curPix           : unsigned := '0';                                  -- Pixels left to transfer
+    signal curBurstcount    : unsigned := '0';                                  -- Bursts left to transfer
+
+    -- internal signals
+    signal i_gFIFO_wrreq : std_logic                        := '0';             -- internal Write request to global FIFO
+    signal i_gFIFO_data  : std_logic_vector(15 downto 0)    := (others => '0'); -- internal Data to push in global FIFO
+    signal i_lFIFO_rdreq : std_logic                        := '0';             -- internal Read request to local FIFO
 
 
 begin
@@ -52,99 +52,83 @@ begin
 	begin
     		if nReset = '0' then
                 --reset values
-                i_read              <= '0';
-                i_burstcount        <= (others => '0');
-                i_address           <= (others => '0');
-                i_memRed            <= '0';
-                i_nPixToCount       <= (others => '0');            
-                i_clrPixCounter     <= '0';
-                i_clrBurstCounter   <= '0';
+                i_gFIFO_wrreq <= '0';             
+                i_gFIFO_data  <= (others => '0'); 
+                i_lFIFO_rdreq <= '0';
+                curpix <= '0';             
+
 
     		elsif rising_edge(clk) then
 
 				case current_state is
 		
                     when Idle =>
-                        if memWritten = '1' then
-                            current_state <= CheckEOL;                           -- New frame available in memory, start reading
+                        if AM_read = '1' then
+                            current_state <= Init;                              -- Read has been requested, start init
                         else
-                            current_state <= Idle;                              -- No frame available
+                            current_state <= Idle;                              -- No memory read requested available
                         end if;
                     
-                    when CheckEOL =>
-                        if pixCounter >= BufferLength  then
-                            current_state <= ResetPointer;                      -- Total nb of pixel read, reset pointer
+                    when Init =>
+                        curPix          <= unsigned(nPixToCount);               -- Store number of pix to count for this cycle
+                        curBurstcount   <= unsigned(burstcount);                -- Store number of bursts to count for this cycle
+                        i_gFIFO_data <= (other => '0');                         -- clear buffer
+                        current_state   <= waitBurstComplete;                   -- go to Wait end of burst read
+
+                    when waitBurstCompletion =>
+                        if curBurstcount = unsigned(BurstCounter) then
+                            current_state <= rise_lFIFO_rdreq;                  -- local FIFO has received all data, begin transfer        
                         else
-                            current_state <= SyncGlobalFIFO;                    -- Total nb of pixels not reached, continue
+                            current_state <= waitBurstCompletion;               -- Wait for burstread completion
                         end if;
 
-                    when SyncGlobalFIFO =>
-                        if GlobalFIFO_AlmostFull = '0' then
-                            current_state <= GetPointer;                        -- Global FIFO still has space for more data, create a read        
-                        else
-                            current_state <= SyncGlobalFIFO;                    -- Global FIFO is full, wait for LCD controller to empty it
-                        end if;
-
-                    when GetPointer =>
-                        i_clrBurstCounter <= '1';                               -- burst Counter is cleared
-                        if unsigned(pixCounter) - unsigned(BufferLength) >= to_unsigned(2*DefaultBurstLength, i_burstcount'length) then   -- if pixels left to read > number of pixels in full burst  
-                            i_burstcount <= std_logic_vector(to_unsigned(DefaultBurstLength, i_burstcount'length)); -- burst count is full length
-                            i_nPixToCount <= std_logic_vector(to_unsigned(2*DefaultBurstLength, i_burstcount'length)); -- count full length pixels
-                        else 
-                            i_burstcount <= (0 => '1', others => '0');
-                            if unsigned(pixCounter) - unsigned(BufferLength) > 1 then
-                                i_nPixToCount <= "10";     -- Pix to count takes value 2
-                            else
-                                i_nPixToCount <= "01";     -- Pix to count takes value 2
-                            end if;
-                        end if;
-                        current_state <= SetRdSignals;
+                    when rise_lFIFO_rdreq =>
+                        i_lFIFO_rdreq <= '1';                                   -- Rising edge on lFIFO rdreq        
+                        current_state <= fall_lFIFO_rdreq;                      -- Move to deassertion of lFIFO rdreq
             
-                    when SetRdSignals =>
-                        i_clrBurstCounter <= '0';                               -- Stop clr of Burst counter
-                        i_read <= '1';                                          -- Assert read signal for new read
-                        current_state <= WaitWaitRequest;
+                    when fall_lFIFO_rdreq =>
+                        i_lFIFO_rdreq   <= '0';                                 -- Falling edge on lFIFO rdreq
+                        i_gFIFO_data    <= lFIFO_q;                             -- Store output of lFIFO for transfer to gFIFO 
+                        current_state   <= check_gFIFO_wrfull;                  -- Move to check if gFIFO full
             
-                    when WaitWaitRequest =>
-                        if waitrequest = '0' then
-                            current_state <= RealeaseRdSignals;                 -- Avalon bus is available and has received read signals, move to deassert state
+                    when check_gFIFO_wrfull =>
+                        if gFIFO_wrfull = '0' then
+                            current_state <= rise_gFIFO_wrreq;                  -- gFIFO still has space left, write is possible, move to write
                         else
-                            current_state <= WaitWaitRequest;                   -- Avalon bus is still not available
+                            current_state <= check_gFIFO_wrfull;                -- No space left in gFIFO, loop to wait for space
                         end if;
 
-                    when RealeaseRdSignals =>
-                        i_read <= '0';                                          -- Release read signal
-                        current_state <= SyncMasterFIFO1;   
+                    when rise_gFIFO_wrreq =>
+                        i_gFIFO_wrreq <= '1';                                   -- Rising edge on gFIFO wrreq        
+                        current_state <= fall_gFIFO_wrreq;                      -- Move to deassertion of gFIFO wrreq
+            
+                    when fall_gFIFO_wrreq =>
+                        i_gFIFO_wrreq   <= '0';                                 -- Falling edge on gFIFO wrreq
+                        curPix          <= curPix - 1;                          -- One pixel has been pushed, decrease internal variable
+                        current_state   <= check_curpix;                        -- Move to check if internal pix variable reached 0
                     
-                    when SyncMasterFIFO1 =>
-                        if MasterFIFO_empty = '0' then
-                            current_state <= UpdateAddress;                     -- Master FIFO is not empty, at least one data has been sent, go to idle
+                    when check_curpix =>
+                        if curPix = 0 then
+                            current_state <= check_lFIFO_rdempty;               -- No more useful pixels left to read, go to check if lFIFO is empty
                         else
-                            current_state <= SyncMasterFIFO1;                   -- Master FIFO still hasn't received any data from read, wait
+                            current_state <= rise_lFIFO_rdreq;                  -- Pixels left to read, loop to beginning of cycle
                         end if;
 
-                    when UpdateAddress =>
-                        i_address <= std_logic_vector(unsigned(i_address) + unsigned(i_burstcount));                  -- Append address pointer
-                        current_state <= SyncMasterFIFO2;
-
-                    when SyncMasterFIFO2 =>
-                        if MasterFIFO_empty = '1' then
-                            current_state <= CheckEOL;                          -- Master FIFO has been read and emptied, go to next read                     
+                    when check_lFIFO_rdempty =>
+                        if lFIFO_rdempty = '1' then
+                            current_state <= Idle;                              -- lFIFO is empty, wait for next AM_read
                         else
-                            current_state <= SyncMasterFIFO2;                   -- Master FIFO operation not finished 
+                            current_state <= rise_lFIFO_rdreq_del;              -- No useful pixels are left in the FIFO but it is not empty, move to delete cycle
                         end if;
-                    
-                    when ResetPointer =>
-                        i_address <= StartAddress;                              -- Reset address pointer to StartAddress
-                        i_clrPixCounter <= '1';                                 -- Clear pixel counter for new frame
-                        i_memRed <= '1';                                        -- Synchronize with IP_CAM                
-                        current_state <= ClrMemRed;
-                    
-                    when ClrMemRed =>
-                        i_clrPixCounter <= '0';                                 -- realase clear of pixel counter
-                        i_memRed <= '0';                                        -- release sync with IP_CAM signal
-                        current_state <= ClrMemRed;   
 
+                    when rise_lFIFO_rdreq_del =>
+                        i_lFIFO_rdreq <= '1';                                   -- Rising edge on lFIFO rdreq    
+                        current_state <= fall_lFIFO_rdreq_del;                  -- Move to deassertion of lFIFO rdreq
+                    
+                    when fall_lFIFO_rdreq_del =>
+                        i_lFIFO_rdreq <= '0';                                   -- Falling edge on lFIFO rdreq    
+                        current_state <= check_lFIFO_rdempty;                   -- Move to check if lFIFO is now empty
+                    
                     when others =>
                         current_state <= Idle;
 
@@ -154,13 +138,9 @@ begin
 	end process;
     
     -- Apply internal to external
-    read            <= i_read;      
-    burstcount      <= i_burstcount;
-    address         <= i_address;
-    memRed          <= i_memRed;             
-    nPixToCount     <= i_nPixToCount;                    
-    clrPixCounter   <= i_clrPixCounter;      
-    clrBurstCounter <= i_clrBurstCounter;       
+    gFIFO_wrreq <= i_gFIFO_wrreq; 
+    gFIFO_data  <= i_gFIFO_data;
+    lFIFO_rdreq <= i_lFIFO_rdreq;
 
 end RTL;
 
