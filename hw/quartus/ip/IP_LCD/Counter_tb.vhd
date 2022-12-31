@@ -19,7 +19,8 @@ architecture test of Counter_tb is
 
 	signal clk      : std_logic;
 	signal nReset   : std_logic;
-    signal trigger : std_logic :='0';
+    signal trigger1 : std_logic :='0';
+	--signal trigger2 : std_logic :='0';
     signal clr     : std_logic;
     signal cnt     : std_logic_vector(CNT_WIDTH-1 downto 0);
 
@@ -36,7 +37,8 @@ begin
 
     port map(
         nReset  => nReset,
-        trigger => trigger,
+        trigger1 => trigger1,
+		trigger2 => '1',--trigger2,
         clr     => clr,
         cnt     => cnt    
     );
@@ -55,17 +57,17 @@ begin
 	end process clk_generation;
 	
     -- Generate trigger signal
-	trigger_generation : process
+	trigger1_generation : process
 	begin
 		if not sim_finished then
-			trigger <= '1';
+			trigger1 <= '1';
 			wait for 5*CLK_PERIOD / 2;
-			trigger <= '0';
+			trigger1 <= '0';
 			wait for 5*CLK_PERIOD / 2;
 		else 
 			wait;
 		end if;
-	end process trigger_generation;
+	end process trigger1_generation;
 
 
 -- Simulation
@@ -91,7 +93,7 @@ begin
 	
 	-- Attribute default values
 		nReset 	<= '1';
-        --trigger <= '0';
+        --trigger2 <= '1';
         clr     <= '0';
         
 		wait until rising_edge(clk);
@@ -108,6 +110,11 @@ begin
         clr <='0';
 
         wait for 10*TIME_DELTA;
+
+		--trigger2 <= '0';
+
+		wait for 10*TIME_DELTA;
+
         sim_finished <= true;
 		wait;
 	
