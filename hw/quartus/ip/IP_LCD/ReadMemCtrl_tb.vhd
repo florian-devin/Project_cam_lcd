@@ -98,7 +98,7 @@ begin
 		nReset <= '1';
 	end procedure async_reset;
 	
--- Avalon Bus read test procedure
+
 	procedure rdloop is
 	begin
 		wait until rising_edge(clk);

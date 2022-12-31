@@ -87,7 +87,7 @@ begin
 		nReset <= '1';
 	end procedure async_reset;
 	
--- Avalon Bus read test procedure
+
 	procedure WrRdloop is
 	begin
 		wait until rising_edge(clk);
@@ -125,7 +125,7 @@ begin
         BurstCounter  <= x"0";   
         nPixToCount   <= x"08";    
         mFIFO_q       <= x"1234";        
-        mFIFO_rdempty <= '0';  
+        mFIFO_rdempty <= '1';  
         gFIFO_wrfull  <= '0';  
         
 		wait until rising_edge(clk);
@@ -138,9 +138,11 @@ begin
 		--memwritten pulses
 
 		WrRdloop;
+		wait for 10*TIME_DELTA;
 
-
-		wait for 2*TIME_DELTA;
+		mFIFO_q <= x"4321";
+		WrRdloop;
+		wait for 10*TIME_DELTA;
 
 		-- Indicate end of tb
 		sim_finished <= true;
