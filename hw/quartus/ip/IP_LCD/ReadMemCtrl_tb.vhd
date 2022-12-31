@@ -31,8 +31,10 @@ architecture test of ReadMemCtrl_tb is
 
 	-- Outputs
     signal read            : std_logic;                                        -- Avalon Bus read 
+	signal isig_read            : std_logic;                                        -- Avalon Bus read 
     signal burstcount      : std_logic_vector(3 downto 0);                     -- Avalon Bus burst count (nb of consecutive reads)
-    signal address         : std_logic_vector(31 downto 0);                    -- Avalon Bus address
+    signal isig_burstcount : std_logic_vector(3 downto 0);                     -- Avalon Bus burst count (nb of consecutive reads)
+	signal address         : std_logic_vector(31 downto 0);                    -- Avalon Bus address
     signal memRed          : std_logic;                                        -- Synchronization with IP_CAM, memory has been read completely by IP_LCD
     signal nPixToCount     : std_logic_vector(7 downto 0);                     -- Nb of pixel to read in the current burstread           
     signal clrPixCounter   : std_logic;                                        -- Pixel counter reset signal
@@ -62,7 +64,9 @@ begin
         memWritten            => memWritten,           
         pixCounter            => pixCounter,              
         read                  => read,                 
-        burstcount            => burstcount,           
+        im_read				  => isig_read, 
+		burstcount            => burstcount,
+		im_burstcount         => isig_burstcount,            
         address               => address,              
         memRed                => memRed,               
         nPixToCount           => nPixToCount,          

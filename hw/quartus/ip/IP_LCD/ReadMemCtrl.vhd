@@ -23,7 +23,9 @@ entity ReadMemCtrl is
 
         --Outputs
         read            : out std_logic;                                        -- Avalon Bus read 
+        im_read         : out std_logic;                                          -- Avalon Bus read for master internal signal
         burstcount      : out std_logic_vector(3 downto 0);                     -- Avalon Bus burst count (nb of consecutive reads)
+        im_burstcount   : out std_logic_vector(3 downto 0);                                        
         address         : out std_logic_vector(31 downto 0);                    -- Avalon Bus address
         memRed          : out std_logic;                                        -- Synchronization with IP_CAM, memory has been read completely by IP_LCD
         nPixToCount     : out std_logic_vector(7 downto 0);                     -- Nb of pixel to read in the current burstread           
@@ -163,8 +165,10 @@ begin
 	end process;
     
     -- Apply internal to external
-    read            <= i_read;      
+    read            <= i_read;
+    im_read         <= i_read;       
     burstcount      <= i_burstcount;
+    im_burstcount   <= i_burstcount;
     address         <= i_address;
     memRed          <= i_memRed;             
     nPixToCount     <= i_nPixToCount;                    

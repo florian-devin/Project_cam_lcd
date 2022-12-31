@@ -29,7 +29,7 @@ entity master_wrapper is
         memRed      : out std_logic;                                            -- Synchronization with IP_CAM, memory has been read completely by IP_LCD
         -- To global FIFO
         gFIFO_wrreq : out std_logic;                                            -- Write request to global FIFO
-        gFIFO_data  : out std_logic_vector(15 downto 0);                        -- Data to push in global FIFO
+        gFIFO_data  : out std_logic_vector(15 downto 0)                        -- Data to push in global FIFO
     );
 end master_wrapper;
 
@@ -55,7 +55,9 @@ architecture arch of master_wrapper is
 
             --Outputs
             read            : out std_logic;                                        -- Avalon Bus read 
+            im_read         : out std_logic;   
             burstcount      : out std_logic_vector(3 downto 0);                     -- Avalon Bus burst count (nb of consecutive reads)
+            im_burstcount   : out std_logic_vector(3 downto 0);                                        
             address         : out std_logic_vector(31 downto 0);                    -- Avalon Bus address
             memRed          : out std_logic;                                        -- Synchronization with IP_CAM, memory has been read completely by IP_LCD
             nPixToCount     : out std_logic_vector(7 downto 0);                     -- Nb of pixel to read in the current burstread           
@@ -129,10 +131,12 @@ architecture arch of master_wrapper is
     signal isig_clrPixCounter       : std_logic;
     signal isig_BurstCounter        : std_logic_vector(3 downto 0);
     signal isig_clrBurstCounter     : std_logic;
-    signal isig_mFIFOq              : std_logic_vector(15 downto 0);                     -- Output of the master FIFO
+    signal isig_mFIFO_q             : std_logic_vector(15 downto 0);                     -- Output of the master FIFO
     signal isig_mFIFO_rdempty       : std_logic;
     signal isig_mFIFO_rdreq         : std_logic;
 
+    signal isig_read                : std_logic;
+    signal isig_burstcount          : std_logic_vector(3 downto 0);
 
 begin
 
@@ -153,7 +157,9 @@ begin
             memWritten            => memWritten,           
             pixCounter            => isig_pixCounter,              
             read                  => read,                 
-            burstcount            => burstcount,           
+            im_read               => isig_read,
+            burstcount            => burstcount,
+            im_burstcount         => isig_burstcount,           
             address               => address,              
             memRed                => memRed,               
             nPixToCount           => isig_nPixToCount,          
@@ -166,9 +172,9 @@ begin
             clk 	=> clk,
             nReset 	=> nReset,
 
-            AM_read       => read,        
-            burstcount    => burstcount,     
-            BurstCounter  => BurstCounter,   
+            AM_read       => isig_read,        
+            burstcount    => isig_burstcount,     
+            BurstCounter  => isig_BurstCounter,   
             nPixToCount   => isig_nPixToCount,    
             mFIFO_q       => isig_mFIFO_q,        
             mFIFO_rdempty => isig_mFIFO_rdempty,  
