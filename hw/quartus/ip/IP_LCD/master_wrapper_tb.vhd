@@ -97,6 +97,78 @@ begin
 		nReset <= '1';
 	end procedure async_reset;
 	
+
+    procedure buflen3 is
+	begin 
+        bufferLength <= x"00000003";
+        wait for 2*CLK_PERIOD;
+
+        memWritten<= '1';
+        wait until rising_edge(clk);
+		memWritten <= '0';
+        wait until rising_edge(clk);
+		
+        wait for 2*TIME_DELTA;
+        -- simulate read data valid fom Avalon Bus
+        readdatavalid<= '1';
+        wait for CLK_PERIOD;
+		readdatavalid <= '0';
+        wait until rising_edge(clk);
+
+        wait for 500 ns;
+        -- simulate read data valid fom Avalon Bus
+        readdatavalid<= '1';
+        wait for CLK_PERIOD;
+		readdatavalid <= '0';
+        wait until rising_edge(clk);
+	end procedure buflen3;
+
+
+
+    procedure buflen8 is
+	begin 
+        bufferLength <= x"00000008";
+        wait for 2*CLK_PERIOD;
+
+        memWritten<= '1';
+        wait until rising_edge(clk);
+		memWritten <= '0';
+        wait until rising_edge(clk);
+		
+        wait for 2*TIME_DELTA;
+        
+        -- simulate read data valid fom Avalon Bus
+        readdatavalid<= '1';
+        wait for CLK_PERIOD;
+		readdatavalid <= '0';
+        wait until rising_edge(clk);
+
+        wait for TIME_DELTA;
+        -- simulate read data valid fom Avalon Bus
+        readdatavalid<= '1';
+        wait for CLK_PERIOD;
+		readdatavalid <= '0';
+        wait until rising_edge(clk);
+
+        wait for TIME_DELTA;
+        -- simulate read data valid fom Avalon Bus
+        readdatavalid<= '1';
+        wait for CLK_PERIOD;
+		readdatavalid <= '0';
+        wait until rising_edge(clk);
+
+        wait for TIME_DELTA;
+        -- simulate read data valid fom Avalon Bus
+        readdatavalid<= '1';
+        wait for CLK_PERIOD;
+		readdatavalid <= '0';
+        wait until rising_edge(clk);
+
+
+
+
+
+	end procedure buflen8;
 	
 	
 	
@@ -108,7 +180,7 @@ begin
         readdata                 <= x"12345678";
         globalFIFO_AlmostFull    <= '0';
         startAddress             <= (others => '0');
-        bufferLength             <= x"00000003";
+        bufferLength             <= x"00000000";
         memWritten               <= '0';
         gFIFO_wrfull             <= '0';
         
@@ -119,18 +191,12 @@ begin
 
 		wait for TIME_DELTA;
 
-        memWritten<= '1';
-        wait until rising_edge(clk);
-		memWritten <= '0';
-        wait until rising_edge(clk);
+        buflen3;
 
+        wait for TIME_DELTA;
 
-        wait for 2*TIME_DELTA;
-        -- simulate read data valid fom Avalon Bus
-        readdatavalid<= '1';
-        wait for CLK_PERIOD;
-		readdatavalid <= '0';
-        wait until rising_edge(clk);
+        
+        buflen8;
 
 
         wait for 50*TIME_DELTA;
