@@ -19,13 +19,14 @@ entity sequencer is
         framegenEnabled : out std_logic;
         dataSeq : out std_logic_vector(15 downto 0);
         D_CX_Seq : out std_logic;
-        RdFifo : out std_logic
+        RdFifo : out std_logic;
+        seqDone : out std_logic
 		);
 end sequencer;
 
 architecture RTL of sequencer is
 
-	type states is (idle, sendData, waitFramegen, tempoData);
+	type states is (idle);
 	signal current_state: states;
 	attribute enum_encoding: string;
 	attribute enum_encoding of states: type is "gray";
@@ -34,6 +35,7 @@ architecture RTL of sequencer is
     signal dataSeq_i : std_logic_vector(15 downto 0) := (others => '0');
     signal D_CX_Seq_i : std_logic := '0';
     signal RdFifo_i : std_logic := '0';
+    signal seqDone_i : std_logic := '0';
 begin
 
 
@@ -44,6 +46,7 @@ begin
                 dataSeq_i <= (others => '0');
                 D_CX_Seq_i <= '0';
                 RdFifo_i <= '0';
+                seqDone_i <= '0';
         		current_state <= idle;
 				
     		elsif rising_edge(clk) then
@@ -53,6 +56,7 @@ begin
 				when idle =>
                     framegenEnabled_i <= '0';
                     RdFifo_i <= '0';
+                    seqDone_i <= '0';
                     if updateCmd = '1' then
                         dataSeq_i <= regCmd;
                         framegenEnabled_i <= '1';
@@ -81,6 +85,9 @@ begin
                 when waitFramegen =>
                     framegenEnabled_i <= '0';
                     if frame_finished = '1' then
+                        if updateCmd = '1' OR updateParam = '1' then
+                            seqDone_i <= '1';
+                        end if;
                         current_state <= idle;
                     end if;             
         
@@ -95,6 +102,7 @@ begin
     dataSeq <= dataSeq_i;
     D_CX_Seq <= D_CX_Seq_i;
     RdFifo <= RdFifo_i;
+    seqDone <= seqDone_i;
 
 end RTL;
 
