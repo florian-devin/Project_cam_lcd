@@ -78,7 +78,9 @@ begin
 
                     when waitBurstCompletion =>
                         if curBurstcount = unsigned(BurstCounter) then
-                            current_state <= rise_mFIFO_rdreq;                  -- master FIFO has received all data, begin transfer        
+                            if mFIFO_rdempty = '0' then
+                                current_state <= rise_mFIFO_rdreq;                  -- master FIFO has received all data, begin transfer        
+                            end if;
                         else
                             current_state <= waitBurstCompletion;               -- Wait for burstread completion
                         end if;

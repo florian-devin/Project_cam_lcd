@@ -124,6 +124,15 @@ begin
 		memWritten <= '0';
         wait until rising_edge(clk);
 
+
+        wait for 2*TIME_DELTA;
+        -- simulate read data valid fom Avalon Bus
+        readdatavalid<= '1';
+        wait for CLK_PERIOD;
+		readdatavalid <= '0';
+        wait until rising_edge(clk);
+
+
         wait for 50*TIME_DELTA;
 
 		-- Indicate end of tb

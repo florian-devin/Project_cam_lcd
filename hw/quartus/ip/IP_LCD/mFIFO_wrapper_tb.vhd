@@ -111,7 +111,7 @@ begin
 
         wrfifo;
         wait until rising_edge(clk);
-        wrfifo;
+        wait until rising_edge(clk);
         wait until rising_edge(clk);
 
         rdfifo;

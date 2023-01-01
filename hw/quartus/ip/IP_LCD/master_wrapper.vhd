@@ -124,8 +124,7 @@ architecture arch of master_wrapper is
     -- Internal signals
 
 	signal iBit_sent : std_logic;
-        
-    signal isig_MasterFIFO_empty    : std_logic;     
+            
     signal isig_pixCounter          : std_logic_vector(31 downto 0);              -- Nb of pixel read since last start of frame                
     signal isig_nPixToCount         : std_logic_vector(7 downto 0);                     -- Nb of pixel to read in the current burstread           
     signal isig_clrPixCounter       : std_logic;
@@ -150,7 +149,7 @@ begin
             nReset 	=> nReset,
 
             waitrequest           => waitrequest,          
-            MasterFIFO_empty      => isig_MasterFIFO_empty,     
+            MasterFIFO_empty      => isig_mFIFO_rdempty ,     
             globalFIFO_AlmostFull => globalFIFO_AlmostFull,
             startAddress          => startAddress,         
             bufferLength          => bufferLength,         

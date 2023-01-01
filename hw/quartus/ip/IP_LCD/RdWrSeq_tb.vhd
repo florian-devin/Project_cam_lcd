@@ -102,6 +102,7 @@ begin
         wait for TIME_DELTA;
         --waitBurstCompletion
 		BurstCounter <= burstcount;
+		mFIFO_rdempty <= '0';
         wait until rising_edge(clk);
         --rise/fall mFIFO rdreq, i_gFIFO_data ?
         --check gFIFO wrfull
@@ -112,6 +113,10 @@ begin
         --check curpix and curpix = 0
         --check mFIFO rdempty, is empty here TEST CASE WHEN NOT EMPTY
         --back to IDLE
+
+		wait for 1500 ns;
+		mFIFO_rdempty <= '1';
+        wait until rising_edge(clk);
 		
 	end procedure WrRdloop;
 	
