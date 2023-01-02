@@ -84,8 +84,7 @@ architecture arch of memoryAcc_wrapper is
             empty		    : OUT STD_LOGIC ;
             full		    : OUT STD_LOGIC ;
             q		        : OUT STD_LOGIC_VECTOR (15 DOWNTO 0)
-
-    );
+        );
 
     end component gFIFO_wrapper;
 	

@@ -172,6 +172,7 @@ begin
 
         wait for TIME_DELTA;
         -- simulate read data valid fom Avalon Bus
+        readdataMaster <= X"00060A0E";
         readdatavalid<= '1';
         wait for CLK_PERIOD;
 		readdatavalid <= '0';

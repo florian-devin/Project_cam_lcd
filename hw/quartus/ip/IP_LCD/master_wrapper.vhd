@@ -120,6 +120,17 @@ architecture arch of master_wrapper is
         );
 
     end component mFIFO_wrapper;
+
+    component data_rotation
+        port(
+            clk     : in std_logic;
+            nReset  : in std_logic;
+            readdatavalid_in : IN STD_LOGIC;
+            readdatavalid_out: OUT STD_LOGIC;
+            readdata_in : IN STD_LOGIC_VECTOR (31 DOWNTO 0);
+            readdata_out: OUT STD_LOGIC_VECTOR (31 DOWNTO 0)
+        );
+    end component data_rotation;
 	
     -- Internal signals
             
@@ -134,6 +145,8 @@ architecture arch of master_wrapper is
 
     signal isig_read                : std_logic;
     signal isig_burstcount          : std_logic_vector(3 downto 0);
+    signal isig_readdata           : std_logic_vector(31 downto 0);
+    signal isig_readdatavalid      : std_logic;
 
 begin
 
@@ -188,9 +201,9 @@ begin
         port map(
             clk     => clk,
             nReset  => nReset,
-            data    => readdata,
+            data    => isig_readdata,
             rdreq   => isig_mFIFO_rdreq,
-            wrreq   => readdatavalid,
+            wrreq   => isig_readdatavalid,
             q		=> isig_mFIFO_q,
             rdempty	=> isig_mFIFO_rdempty
             
@@ -214,15 +227,21 @@ begin
         )
         port map(
             nReset      => nReset,
-            trigger1    => readdatavalid,
+            trigger1    => isig_readdatavalid,
             trigger2    => clk,
             clr         => isig_clrBurstCounter,
             cnt         => isig_BurstCounter    
         );
 
-
-
-
+    U5_data_rotation : data_rotation
+        port map(
+            clk     => clk,
+            nReset  => nReset,
+            readdatavalid_in => readdatavalid,
+            readdatavalid_out => isig_readdatavalid,
+            readdata_in => readdata,
+            readdata_out => isig_readdata
+        );
 
 end arch;
 				
