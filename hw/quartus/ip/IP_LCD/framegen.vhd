@@ -97,4 +97,3 @@ begin
     D <= D_i;
 
 end RTL;
-

@@ -63,7 +63,7 @@ begin
         D_CX => D_CX,
         RDX => RDX,
         WRX => WRX,
-        D => D           
+        D => D         
     );
 	
 	-- Generate CLK signal
@@ -131,6 +131,5 @@ begin
     wait;
 
 	end process simulation;
-	
 	
 end architecture test;
