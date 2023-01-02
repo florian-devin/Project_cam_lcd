@@ -61,11 +61,89 @@ begin
 	end process;
 
 	simulation : process
+
+    procedure avalonWrite(constant addr : in natural;
+                          constant data : in natural) is
+    begin
+
+        address <= std_logic_vector(to_unsigned(addr, 3));
+        writedata <= std_logic_vector(to_unsigned(data, 32));
+        write <= '1';
+        wait for 20 ns;
+        write <= '0';
+        wait for 20 ns;
+
+    end procedure avalonWrite;
+
+    procedure avalonRead(constant addr : in natural) is
+    begin
+
+        address <= std_logic_vector(to_unsigned(addr, 3));
+        read <= '1';
+        wait for 20 ns;
+        read <= '0';
+        wait for 20 ns;
+
+    end procedure avalonRead;
+
 	begin
 		nReset <= '0';
+        address <= "000";
+        write <= '0';
+        read <= '0';
+        writedata <= (others => '0');
+        FIFO_full <= '0';
+        FIFO_almost_full <= '0';
+        FIFO_empty <= '1';
+        FIFO_almost_empty <= '0';
+        seqDone <= '0';
 
         wait for 20 ns;
         nReset <= '1';
+
+        wait for 20 ns;
+        avalonWrite(1, 16#00DAAAAA#);
+        seqDone <= '1';
+
+        wait for 40 ns;
+        avalonWrite(2, 16#00ABBBBB#);
+
+        wait for 40 ns;
+        avalonWrite(3, 16#000000AA#);
+        seqDone <= '0';
+
+        wait for 40 ns;
+        avalonWrite(3, 16#000000AB#);
+
+        wait for 40 ns;
+        avalonWrite(3, 16#000000BA#);
+        seqDone <= '1';
+
+        wait for 40 ns;
+        avalonWrite(4, 16#000000BB#);
+
+        wait for 20 ns;
+        FIFO_full <= '1';
+        FIFO_almost_full <= '1';
+        FIFO_empty <= '0';
+        FIFO_almost_empty <= '0';
+
+        wait for 20 ns;
+        avalonRead(0);
+
+        wait for 40 ns;
+        avalonRead(1);
+
+        wait for 40 ns;
+        avalonRead(2);
+
+        wait for 40 ns;
+        avalonRead(3);
+
+        wait for 40 ns;
+        avalonRead(4);
+
+
 
 		wait;
 	end process;

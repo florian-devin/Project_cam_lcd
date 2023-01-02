@@ -77,7 +77,6 @@ begin
 	process(clk, nReset)
 	begin	
         if nReset = '0' then
-            iregFIFOStatus <= (others => '0');
             iregMemStartAddress <= (others => '0');
             iregMemBufferLength <= (others => '0');
             iregCfgCmd <= (others => '0');

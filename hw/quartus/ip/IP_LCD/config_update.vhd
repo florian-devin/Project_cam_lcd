@@ -51,7 +51,7 @@ begin
 					updateCmd_i <= '0';
 					updateParam_i <= '0';
 					rdreq_i <= '0'; 
-					if SlaveFifoEmpty = '0' then
+					if SlaveFifoEmpty = '0' AND seqDone = '1' then
 						rdreq_i <= '1';
 						current_state <= askData;
 					end if;
