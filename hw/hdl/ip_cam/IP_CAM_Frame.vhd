@@ -157,6 +157,7 @@ begin
 
             -- Wait for Hsync (LINE_VALID)
             when ST_WAIT_HSYNC =>
+            new_frame <= '0';
             if Hsync = '1' then
                 state <= ST_SAMPLE_RED;
             else null;
