@@ -35,6 +35,8 @@ end IP_CAM_Frame;
 
 architecture  behav of IP_CAM_Frame is
 
+    signal PXL_CLK_old: std_logic := '0';
+
     signal old_vsync  : std_logic := '0';
     signal old_hsync  : std_logic := '0';
 
@@ -141,6 +143,7 @@ begin
         case state is
 
             -- Wait for acquisition to start
+        -- ST_IDLE
             when ST_IDLE =>
             CAM_reset <= '1';
             capture_done <= '0';
@@ -149,7 +152,8 @@ begin
                 state <= ST_WAIT_VSYNC;
             else null;
             end if;
-
+        
+        -- ST_WAIT_VSYNC
             -- Wait for Vsync
             when ST_WAIT_VSYNC =>
             old_hsync <= Hsync;
@@ -164,6 +168,7 @@ begin
             when ST_WAIT_HSYNC =>
             new_frame <= '0';
             if Hsync = '1' and old_hsync = '0' then
+                PXL_CLK_old <= pxl_clk;
                 state <= ST_SAMPLE_RED;
             else null;
             end if;
@@ -171,25 +176,35 @@ begin
 
             -- Data read is RED pixel
             when ST_SAMPLE_RED =>
-            write_green <= '0';        
-            -- Put data in RED_FIFO (5 bits only, need to truncate)
-            data_red <= CAM_data(4 downto 0); -- Data available on port
-            write_red <= '1'; -- Data sent to FIFO
-            state <= ST_SAMPLE_GREEN1;
+            -- Wait for PXL_CLK to be rising edge
+            if PXL_CLK_old = '0' and pxl_clk = '1' then
+
+                write_green <= '0';        
+                -- Put data in RED_FIFO (5 bits only, need to truncate)
+                data_red <= CAM_data(4 downto 0); -- Data available on port
+                write_red <= '1'; -- Data sent to FIFO
+                state <= ST_SAMPLE_GREEN1;
+            else null;
+            end if;
+            PXL_CLK_old <= pxl_clk;
 
             -- Data read is GREEN1 pixel
             when ST_SAMPLE_GREEN1 =>
-            write_red <= '0';
-            -- Checks if new line
-            if Hsync = '0' then
-                old_hsync <= Hsync;
-                state <= ST_WAIT_LINE_CHANGE_GB;
-            else            
-                -- Put data in GREEN_FIFO (6 bits)
-                data_green <= CAM_data;
-                write_green <= '1';
-                state <= ST_SAMPLE_RED;
+            if PXL_CLK_old = '0' and pxl_clk = '1' then
+                write_red <= '0';
+                -- Checks if new line
+                if Hsync = '0' then
+                    old_hsync <= Hsync;
+                    state <= ST_WAIT_LINE_CHANGE_GB;
+                else            
+                    -- Put data in GREEN_FIFO (6 bits)
+                    data_green <= CAM_data;
+                    write_green <= '1';
+                    state <= ST_SAMPLE_RED;
+                end if;
+            else null;
             end if;
+            PXL_CLK_old <= pxl_clk;
 
             -- Wait for new line to start
             when ST_WAIT_LINE_CHANGE_GB =>
@@ -201,16 +216,23 @@ begin
 
             -- Data read is GREEN2 pixel
             when ST_SAMPLE_GREEN2 =>
-        
+            if PXL_CLK_old = '0' and pxl_clk = '1' then
                 -- Store data
                 GREEN2 := to_integer(signed(CAM_data));
                 state <= ST_SAMPLE_BLUE;
+            else null;
+            end if;
+            PXL_CLK_old <= pxl_clk;
 
             -- Data is blue, need to convert the whole pixel into 16 bits
             when ST_SAMPLE_BLUE =>
-            -- Store truncated data to 5 MSB and go to ST_CONVERT
-            BLUE <= CAM_data(5 downto 1);
-            state <= ST_CONVERT;
+            if PXL_CLK_old = '0' and pxl_clk = '1' then
+                -- Store truncated data to 5 MSB and go to ST_CONVERT
+                BLUE <= CAM_data(5 downto 1);
+                state <= ST_CONVERT;
+            else null;
+            end if;
+            PXL_CLK_old <= pxl_clk;
 
             -- Convert R G1 G2 & B data into 16-bits value
             -- Get Green and Red values from FIFOs
