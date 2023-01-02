@@ -9,9 +9,8 @@ entity lcd_controller is
 		nReset : in std_logic;
 		
 		updateCmd : in std_logic;
-        regCmd : in std_logic_vector(15 downto 0);
         updateParam : in std_logic;
-        regParam : in std_logic_vector(15 downto 0);
+        regData : in std_logic_vector(15 downto 0);
         FifoEmpty : in std_logic;
         RdData : in std_logic_vector(15 downto 0);
 
@@ -20,7 +19,8 @@ entity lcd_controller is
         D_CX : out std_logic;
         WRX : out std_logic;
         RDX : out std_logic;
-        D : out std_logic_vector(15 downto 0)
+        D : out std_logic_vector(15 downto 0);
+        seqDone : out std_logic
         );
 		
 end lcd_controller;
@@ -52,9 +52,8 @@ architecture RTL of lcd_controller is
 			nReset : in std_logic;
 			
 			updateCmd : in std_logic;
-            regCmd : in std_logic_vector(15 downto 0);
             updateParam : in std_logic;
-            regParam : in std_logic_vector(15 downto 0);
+            regData : in std_logic_vector(15 downto 0);
             FifoEmpty : in std_logic;
             frame_finished : in std_logic;
             RdData : in std_logic_vector(15 downto 0);
@@ -62,7 +61,8 @@ architecture RTL of lcd_controller is
             framegenEnabled : out std_logic;
             dataSeq : out std_logic_vector(15 downto 0);
             D_CX_Seq : out std_logic;
-            RdFifo : out std_logic
+            RdFifo : out std_logic;
+            seqDone : out std_logic
             );
 		
 	end component sequencer;
@@ -98,12 +98,12 @@ begin
             D_CX_Seq => D_CX_Seq_i,
             frame_finished => frame_finished_i,
             updateCmd => updateCmd,
-            regCmd => regCmd,
             updateParam => updateParam,
-            regParam => regParam,
+            regData => regData,
             FifoEmpty => FifoEmpty,
             RdData => RdData,
-            RdFifo => RdFifo
+            RdFifo => RdFifo,
+            seqDone => seqDone
         );
 	
 end RTL;

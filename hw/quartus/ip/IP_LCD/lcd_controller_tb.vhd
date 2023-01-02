@@ -12,9 +12,8 @@ architecture test of lcd_controller_tb is
 	signal nReset : std_logic;
 
     signal updateCmd : std_logic;
-    signal regCmd : std_logic_vector(15 downto 0);
     signal updateParam : std_logic;
-    signal regParam : std_logic_vector(15 downto 0);
+    signal regData : std_logic_vector(15 downto 0);
     signal FifoEmpty : std_logic;
     signal RdData : std_logic_vector(15 downto 0);
 
@@ -24,6 +23,7 @@ architecture test of lcd_controller_tb is
     signal WRX : std_logic;
     signal RDX : std_logic;
     signal D : std_logic_vector(15 downto 0);
+    signal seqDone : std_logic;
 
 	constant clk_periode : time := 20 ns;
 
@@ -33,9 +33,8 @@ begin
 	port map(clk => clk,
 		nReset => nReset,
         updateCmd => updateCmd,
-        regCmd => regCmd,
         updateParam => updateParam,
-        regParam => regParam,
+        regData => regData,
         FifoEmpty => FifoEmpty,
         RdData => RdData,
         RdFifo => RdFifo,
@@ -43,7 +42,9 @@ begin
         D_CX => D_CX,
         WRX => WRX,
         RDX => RDX,
-        D => D);
+        D => D,
+        seqDone => seqDone
+        );
 
 	CLOCK :process
 	begin
@@ -57,9 +58,8 @@ begin
 	begin
 		nReset <= '0';
         updateCmd <= '0';
-        regCmd <= (others => '0');
         updateParam <= '0';
-        regParam <= (others => '0');
+        regData <= (others => '0');
         FifoEmpty <= '1';
         RdData <= (others => '0');
 
@@ -67,8 +67,7 @@ begin
         nReset <= '1';
 
         wait for 20 ns;
-        regCmd <= "0000110000010001";
-        regParam <= "0011110000111001";
+        regData <= "0000110000010001";
         RdData <= "0101010101010101";
         updateCmd <= '1';
         updateParam <= '1';
