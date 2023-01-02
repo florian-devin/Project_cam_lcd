@@ -79,6 +79,7 @@ architecture RTL of IP_LCD_wrapper is
             regData : in std_logic_vector(15 downto 0);
             FifoEmpty : in std_logic;
             RdData : in std_logic_vector(15 downto 0);
+            seqDone : out std_logic;
 
             RdFifo : out std_logic;
             CSX : out std_logic;
@@ -171,7 +172,8 @@ begin
             D_CX => D_CX,
             WRX => WRX,
             RDX => RDX,
-            D => D
+            D => D,
+            seqDone => seqDone_i
         );
 
 

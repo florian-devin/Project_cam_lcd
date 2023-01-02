@@ -125,6 +125,8 @@ begin
     wait for 20 ns;
     avalonWrite(1, 16#00000B0A#);
     avalonWrite(2, 16#00000003#);
+    avalonWrite(3, 16#00000EAC#);
+    avalonWrite(4, 16#00000BED#);
 
     wait;
 
