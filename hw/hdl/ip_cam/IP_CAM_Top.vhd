@@ -44,7 +44,8 @@ architecture rtl of IP_CAM_Top is
     signal acquisition  : std_logic;
 
     signal data         : std_logic_vector(31 downto 0);
-    signal new_data     : std_logic;
+    signal empty        : std_logic;
+    --signal new_data     : std_logic;
     signal new_frame    : std_logic;
     signal ack          : std_logic;
 
@@ -92,9 +93,37 @@ begin
     
             -- Internal interface (to frame)
             data            => data,
-            new_data        => new_data,
+            fifo_empty      => empty,
+            --new_data        => new_data,
             new_frame       => new_frame,
             ack             => ack
+        );
+
+    IP_CAM_Frame : entity work.IP_CAM_Frame
+        port map(
+            clk => Clk,
+            nReset => nReset,
+
+            -- Only 6 bits are routed from the camera DOUT
+            CAM_data   => Cam_data,
+            Hsync      => Cam_Hsync,
+            Vsync      => Cam_Vsync,
+            Mclk       => Cam_Mclk,
+            CAM_reset  => CamReset_n,
+            pxl_clk    => Cam_Pixclk,
+
+            -- IP_CAM_AVSlave interface
+            capture_done => capture_done,
+            acquisition  => acquisition,
+
+            -- IP_CAM_AVMaster interface
+            --new_data    => new_data,
+            new_frame   => new_frame,
+            -- Send to FIFO data        :   out std_logic_vector(15 downto 0) := std_logic_vector(to_signed(0, 16)); 
+            ack         => ack,
+            output_interface => data,
+            empty_interface => empty
+
         );
 
 end architecture rtl;

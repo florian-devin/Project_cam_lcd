@@ -2,6 +2,8 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+use work.cmos_sensor_output_generator_constants.all;
+
 entity ip_cam_tb is end;
 
 architecture bench of ip_cam_tb is
@@ -10,19 +12,27 @@ architecture bench of ip_cam_tb is
 
    -- Camera interface
    signal Cam_Mclk        : std_logic := '0';
-   signal Cam_Pixclk      : std_logic;
+   signal Cam_Pixclk      : std_logic := '0';
    signal Cam_Hsync       : std_logic := '0';
    signal Cam_Vsync       : std_logic := '0';
    signal Cam_data        : std_logic_vector(5 downto 0) := (others => '0');
    signal CamReset_n      : std_logic;
 
-   -- Avalon Slave interface
+   -- Avalon Slave interface ip
    signal AS_Address      : std_logic_vector(2 downto 0)  := (others => '0');
    signal AS_Cs_n         : std_logic := '1';
    signal AS_Write_n      : std_logic := '1';
    signal AS_Datawr       : std_logic_vector(31 downto 0) := (others => '0');
    signal AS_Read_n       : std_logic := '1';
    signal AS_Datard       : std_logic_vector(31 downto 0);
+
+   -- Avalon Slave interface cmos
+   signal CMOS_AS_Address : std_logic_vector(2 downto 0)  := (others => '0');
+   signal CMOS_AS_Write   : std_logic := '0';
+   signal CMOS_AS_Datawr  : std_logic_vector(31 downto 0) := (others => '0');
+   signal CMOS_AS_Read    : std_logic := '0';
+   signal CMOS_AS_Datard  : std_logic_vector(31 downto 0);
+   signal CamReset        : std_logic;
 
    -- Avalon Master interface
    signal AM_Address      : std_logic_vector(31 downto 0);
@@ -49,7 +59,44 @@ architecture bench of ip_cam_tb is
    signal CamStop_exp      : std_logic := '0';
    signal CamSnapshot_exp  : std_logic := '0';
 
+   --CMOS reg value
+   constant FRAME_WIDTH       : positive := 5;
+   constant FRAME_HEIGHT      : positive := 4;
+   constant FRAME_FRAME_BLANK : positive := 1;
+   constant FRAME_LINE_BLANK  : natural  := 1;
+   constant LINE_LINE_BLANK   : positive := 1;
+   constant LINE_FRAME_BLANK  : natural  := 1;
+
+   --IP_CAM reg const 
+   constant IP_CAM_ADDR_REG      : std_logic_vector(2 downto 0)  := "000"; --RW
+   constant IP_CAM_LENGTH_REG    : std_logic_vector(2 downto 0)  := "001"; --RW
+   constant IP_CAM_STATUS_REG    : std_logic_vector(2 downto 0)  := "010"; --RO
+   constant IP_CAM_START_REG     : std_logic_vector(2 downto 0)  := "011"; --WO
+   constant IP_CAM_STOP_REG      : std_logic_vector(2 downto 0)  := "100"; --WO
+   constant IP_CAM_SNAPSHOT_REG  : std_logic_vector(2 downto 0)  := "101"; --WO
+
 begin
+   CMOS : entity work.cmos_sensor_output_generator
+   generic map(
+      PIX_DEPTH  => 6,
+      MAX_WIDTH  => 1920,
+      MAX_HEIGHT => 1080
+   )
+   port map(
+      clk         => Cam_Pixclk,
+      reset       => CamReset,
+
+      -- Avalon-MM slave
+      addr        => CMOS_AS_Address,
+      read        => CMOS_AS_Read,
+      write       => CMOS_AS_Write,
+      rddata      => CMOS_AS_Datard,
+      wrdata      => CMOS_AS_Datawr,
+
+      frame_valid => Cam_Vsync,
+      line_valid  => Cam_Hsync,
+      data        => Cam_data
+   );
 
    DUT : entity work.IP_CAM_Top
       port map (
@@ -81,9 +128,14 @@ begin
         AM_WaitRequest  => AM_WaitRequest
       );
 
+
+   CamReset <= not(CamReset_n);
+   
+   
+
    -- clock generator
    clk <= not clk after CLK_PER/2 when not finished;
-
+   Cam_Pixclk <= not Cam_Pixclk after CLK_PER*2 when not finished;
 
    -- stimulus generator
    process
@@ -169,24 +221,56 @@ begin
       end procedure AS_ReadReg;
 
 
+      procedure CMOS_write_register(constant ofst : in std_logic_vector;
+                               constant val  : in natural) is
+      begin
+      wait until falling_edge(Cam_Pixclk);
+      CMOS_AS_Address   <= ofst;
+      CMOS_AS_Write  <= '1';
+      CMOS_AS_Datawr <= std_logic_vector(to_unsigned(val, CMOS_AS_Datawr'length));
+      
+      wait until falling_edge(Cam_Pixclk);
+      CMOS_AS_Address   <= (others => '0');
+      CMOS_AS_Write  <= '0';
+      CMOS_AS_Datawr <= (others => '0');
+      end procedure CMOS_write_register;
+
+
 
    begin
       init;
-      AS_WriteReg("000", x"FFFFFFFF");
-      AS_ReadReg ("000");
-      AS_WriteReg("001", x"AAAAAAAA");
-      AS_ReadReg ("001");
-      AS_WriteReg("010", x"55555555");
-      AS_ReadReg ("010");
 
-      AS_WriteReg("000", x"44A54573");
-      AS_ReadReg ("000");
-      AS_WriteReg("001", x"96EA4684");
-      AS_ReadReg ("001");
-      AS_WriteReg("010", x"1268AB53");
-      AS_ReadReg ("010");
+      -- configure CMOS
+      CMOS_write_register(CMOS_SENSOR_OUTPUT_GENERATOR_CONFIG_FRAME_WIDTH_OFST, 240);
+      CMOS_write_register(CMOS_SENSOR_OUTPUT_GENERATOR_CONFIG_FRAME_HEIGHT_OFST, 320);
+      CMOS_write_register(CMOS_SENSOR_OUTPUT_GENERATOR_CONFIG_FRAME_FRAME_BLANK_OFST, FRAME_FRAME_BLANK);
+      CMOS_write_register(CMOS_SENSOR_OUTPUT_GENERATOR_CONFIG_FRAME_LINE_BLANK_OFST, FRAME_LINE_BLANK);
+      CMOS_write_register(CMOS_SENSOR_OUTPUT_GENERATOR_CONFIG_LINE_LINE_BLANK_OFST, LINE_LINE_BLANK);
+      CMOS_write_register(CMOS_SENSOR_OUTPUT_GENERATOR_CONFIG_LINE_FRAME_BLANK_OFST, LINE_FRAME_BLANK);
+      CMOS_write_register(CMOS_SENSOR_OUTPUT_GENERATOR_COMMAND_OFST, 1);
+      --CMOS_config("000",x"00000140");
+      --CMOS_config("001",x"000000F0");
+      --CMOS_config("110",x"00000001");
 
-      
+      -- random write/read
+      AS_WriteReg(IP_CAM_ADDR_REG, x"FFFFFFFF");
+      AS_ReadReg (IP_CAM_ADDR_REG);
+      AS_WriteReg(IP_CAM_LENGTH_REG, x"AAAAAAAA");
+      AS_ReadReg (IP_CAM_LENGTH_REG);
+      AS_ReadReg (IP_CAM_STATUS_REG);
+
+      --start aquisition
+      AS_WriteReg(IP_CAM_ADDR_REG, x"0000000F");
+      AS_ReadReg (IP_CAM_ADDR_REG);
+      AS_WriteReg(IP_CAM_LENGTH_REG, x"FFFFFFFF");
+      AS_ReadReg (IP_CAM_LENGTH_REG);
+      AS_WriteReg(IP_CAM_START_REG, x"00000001");
+      AS_WriteReg(IP_CAM_SNAPSHOT_REG, x"00000001");
+
+      -- start aquisition
+
+
+      wait for 200 ms;
 
       finish;
    end process;
