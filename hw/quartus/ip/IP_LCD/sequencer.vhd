@@ -25,7 +25,7 @@ end sequencer;
 
 architecture RTL of sequencer is
 
-	type states is (idle, sendData, tempoData, waitFramegen);
+	type states is (idle, sendData, tempo, waitFramegen);
 	signal current_state: states;
 	attribute enum_encoding: string;
 	attribute enum_encoding of states: type is "gray";
@@ -55,19 +55,22 @@ begin
 				when idle =>
                     framegenEnabled_i <= '0';
                     RdFifo_i <= '0';
-                    seqDone_i <= '0';
+                    seqDone_i <= '1';
                     if updateCmd = '1' then
                         dataSeq_i <= regData;
                         framegenEnabled_i <= '1';
                         D_CX_Seq_i <= '0';
-                        current_state <= waitFramegen;
+                        seqDone_i <= '0';
+                        current_state <= tempo;
                     elsif updateParam = '1' then
                         dataSeq_i <= regData;
                         framegenEnabled_i <= '1';
                         D_CX_Seq_i <= '1';
-                        current_state <= waitFramegen;
+                        seqDone_i <= '0';
+                        current_state <= tempo;
                     elsif FifoEmpty = '0' then
                         RdFifo_i <= '1';
+                        seqDone_i <= '0';
                         current_state <= sendData;
                     end if;
 
@@ -76,17 +79,14 @@ begin
                     dataSeq_i <= RdData;
                     framegenEnabled_i <= '1';
                     D_CX_Seq_i <= '1';
-                    current_state <= tempoData;
+                    current_state <= tempo;
 
-                when tempoData =>
+                when tempo =>
                     current_state <= waitFramegen;
 
                 when waitFramegen =>
                     framegenEnabled_i <= '0';
                     if frame_finished = '1' then
-                        if updateCmd = '1' OR updateParam = '1' then
-                            seqDone_i <= '1';
-                        end if;
                         current_state <= idle;
                     end if;             
         

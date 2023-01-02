@@ -21,7 +21,7 @@ end config_update;
 
 architecture RTL of config_update is
 
-	type states is (idle, askData, receiveData);
+	type states is (idle, askData, receiveData, tempo);
 	signal current_state: states;
 	attribute enum_encoding: string;
 	attribute enum_encoding of states: type is "gray";
@@ -67,6 +67,11 @@ begin
 					else
 						updateParam_i <= '1';
 					end if;
+					current_state <= tempo;
+
+				when tempo =>
+					updateCmd_i <= '0';
+					updateParam_i <= '0';
 					current_state <= idle;
 
                 when others =>
