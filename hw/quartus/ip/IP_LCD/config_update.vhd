@@ -15,7 +15,7 @@ entity config_update is
         updateCmd : out std_logic;
         updateParam : out std_logic;
         regData : out std_logic_vector(15 downto 0);
-		rdreq : out std_logic;
+		rdreq : out std_logic
 		);
 end config_update;
 
@@ -61,7 +61,7 @@ begin
 					current_state <= receiveData;
 
 				when receiveData =>
-					regData_i <= q(7 downto 0);
+					regData_i(7 downto 0) <= q(7 downto 0);
 					if q(8) = '0' then
 						updateCmd_i <= '1';
 					else

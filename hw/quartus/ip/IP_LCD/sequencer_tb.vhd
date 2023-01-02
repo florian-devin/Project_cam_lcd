@@ -12,9 +12,8 @@ architecture test of sequencer_tb is
 	signal nReset : std_logic;
 
     signal updateCmd : std_logic;
-    signal regCmd : std_logic_vector(15 downto 0);
     signal updateParam : std_logic;
-    signal regParam : std_logic_vector(15 downto 0);
+    signal regData : std_logic_vector(15 downto 0);
     signal FifoEmpty : std_logic;
     signal frame_finished : std_logic;
     signal RdData : std_logic_vector(15 downto 0);
@@ -23,6 +22,7 @@ architecture test of sequencer_tb is
     signal dataSeq : std_logic_vector(15 downto 0);
     signal D_CX_Seq : std_logic;
     signal RdFifo : std_logic;
+    signal seqDone : std_logic;
 
 	constant clk_periode : time := 20 ns;
 
@@ -33,16 +33,16 @@ begin
 	port map(clk => clk,
 		nReset => nReset,
         updateCmd => updateCmd,
-        regCmd => regCmd,
         updateParam => updateParam,
-        regParam => regParam,
+        regData => regData,
         FifoEmpty => FifoEmpty,
         frame_finished => frame_finished,
         RdData => RdData,
         framegenEnabled => framegenEnabled,
         dataSeq => dataSeq,
         D_CX_Seq => D_CX_Seq,
-        RdFifo => RdFifo);
+        RdFifo => RdFifo,
+        seqDone => seqDone);
 
 	CLOCK :process
 	begin
@@ -56,9 +56,8 @@ begin
 	begin
 		nReset <= '0';
         updateCmd <= '0';
-        regCmd <= (others => '0');
         updateParam <= '0';
-        regParam <= (others => '0');
+        regData <= (others => '0');
         FifoEmpty <= '0';
         frame_finished <= '0';
         RdData <= (others => '0');

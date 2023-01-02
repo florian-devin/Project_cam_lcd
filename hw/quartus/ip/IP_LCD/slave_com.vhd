@@ -62,7 +62,7 @@ begin
 
             if iNewCmd = '1' then
                 iDataFifo <= iregCfgCmd(8 downto 0);
-                iDataFifo(8) <= '0'
+                iDataFifo(8) <= '0';
                 iWrreq <= '1';
             elsif iNewParam = '1' then
                 iDataFifo <= iregCfgParam(8 downto 0);
