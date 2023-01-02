@@ -226,14 +226,15 @@ begin
             data_interface(4 downto 0) <= BLUE;
             data_interface(10 downto 5) <= GREEN;
             data_interface(15 downto 11) <= RED;
-
+            
+            write_interface <= '1';
             state <= ST_SEND;
 
             when ST_SEND =>
             if write_interface = '1' then
                 write_interface <= '0';
             end if;
-            write_interface <= '1';
+            
             read_green <= '0';
             read_red <= '0';
             -- Tell master unit a data is sent
