@@ -35,6 +35,9 @@ end IP_CAM_Frame;
 
 architecture  behav of IP_CAM_Frame is
 
+    signal old_vsync  : std_logic := '0';
+    signal old_hsync  : std_logic := '0';
+
     -- Buffer for GREEN2 and BLUE
     signal GREEN       :   std_logic_vector(5 downto 0);
     signal BLUE     :   std_logic_vector(4 downto 0);
@@ -68,9 +71,7 @@ architecture  behav of IP_CAM_Frame is
     -- Declare state names and state variable
     type STATE_TYPE IS (ST_IDLE,
                         ST_WAIT_VSYNC,
-                        ST_WAIT_VSYNC_REDGE,
                         ST_WAIT_HSYNC,
-                        ST_WAIT_HSYNC_REDGE,
                         ST_SAMPLE_RED,
                         ST_SAMPLE_GREEN1,
                         ST_WAIT_LINE_CHANGE_GB,
@@ -144,41 +145,29 @@ begin
             CAM_reset <= '1';
             capture_done <= '0';
             if acquisition = '1' then
+                old_vsync <= Vsync;
                 state <= ST_WAIT_VSYNC;
             else null;
             end if;
 
-            -- Wait for Vsync at 0 to prepare rising edge detection
+            -- Wait for Vsync
             when ST_WAIT_VSYNC =>
-            if Vsync = '0' then
-                state <= ST_WAIT_VSYNC_REDGE;
-            else null;
-            end if;
-
-            -- Wait for Vsync rising_edge
-            when ST_WAIT_VSYNC_REDGE =>
-            if Vsync = '1' then
-                -- Tell master unit a new frame is being read
+            old_hsync <= Hsync;
+            if Vsync = '1' and old_vsync = '0' then
                 new_frame <= '1';
                 state <= ST_WAIT_HSYNC;
             else null;
             end if;
+            old_vsync <= Vsync;
 
-            -- Wait for Hsync at 0 to prepare rising edge detection
+            -- Wait for Hsync
             when ST_WAIT_HSYNC =>
             new_frame <= '0';
-            if Hsync = '0' then
-                state <= ST_WAIT_HSYNC_REDGE;
-            else null;
-            end if;
-
-            -- Wait for Hsync rising_edge
-            when ST_WAIT_HSYNC_REDGE =>
-            new_frame <= '0';
-            if Hsync = '1' then
+            if Hsync = '1' and old_hsync = '0' then
                 state <= ST_SAMPLE_RED;
             else null;
             end if;
+            old_hsync <= Hsync;
 
             -- Data read is RED pixel
             when ST_SAMPLE_RED =>
