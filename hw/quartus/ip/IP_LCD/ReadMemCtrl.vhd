@@ -36,7 +36,7 @@ end ReadMemCtrl;
 
 architecture RTL of ReadMemCtrl is
 
-	type states is (Idle, CheckEOL, SyncGlobalFIFO, GetPointer, 
+	type states is (Idle, GetStartAddress, CheckEOL, SyncGlobalFIFO, GetPointer, 
                     SetRdSignals, WaitWaitRequest, RealeaseRdSignals,
                     SyncMasterFIFO1, SyncMasterFIFO2, ResetPointer, 
                     UpdateAddress, ClrMemRed);
@@ -77,11 +77,16 @@ begin
 		
                     when Idle =>
                         if memWritten = '1' then
-                            current_state <= CheckEOL;                           -- New frame available in memory, start reading
+                            current_state <= GetStartAddress;                           -- New frame available in memory, start reading
                         else
                             current_state <= Idle;                              -- No frame available
                         end if;
                     
+                    when GetStartAddress =>
+                        i_address <= startAddress;                              -- Reset address pointer to StartAddress
+                        current_state <= CheckEOL;                              -- No frame available
+                        
+
                     when CheckEOL =>
                         if pixCounter >= BufferLength  then
                             current_state <= ResetPointer;                      -- Total nb of pixel read, reset pointer
@@ -148,7 +153,6 @@ begin
                         end if;
                     
                     when ResetPointer =>
-                        i_address <= StartAddress;                              -- Reset address pointer to StartAddress
                         i_clrPixCounter <= '1';                                 -- Clear pixel counter for new frame
                         i_memRed <= '1';                                        -- Synchronize with IP_CAM                
                         current_state <= ClrMemRed;
