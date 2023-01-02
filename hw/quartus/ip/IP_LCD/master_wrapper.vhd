@@ -51,7 +51,7 @@ architecture arch of master_wrapper is
             bufferLength            : in std_logic_vector(31 downto 0);             -- Number of pixels to read in memory
             memWritten              : in std_logic;                                 -- Sync signal from IP_CAM
             pixCounter              : in std_logic_vector(31 downto 0);              -- Nb of pixel read since last start of frame
-            
+            BurstCounter            : in std_logic_vector(3 downto 0);
 
             --Outputs
             read            : out std_logic;                                        -- Avalon Bus read 
@@ -154,7 +154,8 @@ begin
             startAddress          => startAddress,         
             bufferLength          => bufferLength,         
             memWritten            => memWritten,           
-            pixCounter            => isig_pixCounter,              
+            pixCounter            => isig_pixCounter, 
+            BurstCounter          => isig_BurstCounter,             
             read                  => read,                 
             im_read               => isig_read,
             burstcount            => burstcount,

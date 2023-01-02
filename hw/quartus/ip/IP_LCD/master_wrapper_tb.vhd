@@ -131,7 +131,7 @@ begin
         wait for 2*CLK_PERIOD;
 
         memWritten<= '1';
-        wait until rising_edge(clk);
+        wait for CLK_PERIOD;
 		memWritten <= '0';
         wait until rising_edge(clk);
 		
@@ -165,11 +165,61 @@ begin
         wait until rising_edge(clk);
 
 
-
-
-
 	end procedure buflen8;
 	
+
+
+        procedure buflen9 is
+	begin 
+        bufferLength <= x"00000009";
+        wait for 2*CLK_PERIOD;
+
+        memWritten<= '1';
+        wait for CLK_PERIOD;
+		memWritten <= '0';
+        wait until rising_edge(clk);
+		
+        wait for 2*TIME_DELTA;
+        
+        -- simulate read data valid fom Avalon Bus
+        readdatavalid<= '1';
+        wait for CLK_PERIOD;
+		readdatavalid <= '0';
+        wait until rising_edge(clk);
+
+        wait for TIME_DELTA;
+        -- simulate read data valid fom Avalon Bus
+        readdatavalid<= '1';
+        wait for CLK_PERIOD;
+		readdatavalid <= '0';
+        wait until rising_edge(clk);
+
+        wait for TIME_DELTA;
+        -- simulate read data valid fom Avalon Bus
+        readdatavalid<= '1';
+        wait for CLK_PERIOD;
+		readdatavalid <= '0';
+        wait until rising_edge(clk);
+
+        wait for TIME_DELTA;
+        -- simulate read data valid fom Avalon Bus
+        readdatavalid<= '1';
+        wait for CLK_PERIOD;
+		readdatavalid <= '0';
+        waitrequest <= '1';
+        wait until rising_edge(clk);
+
+        wait for 10*TIME_DELTA;
+        waitrequest <= '0';
+        wait until rising_edge (clk);
+        -- simulate read data valid fom Avalon Bus
+        readdatavalid<= '1';
+        wait for CLK_PERIOD;
+		readdatavalid <= '0';
+        wait until rising_edge(clk);
+
+
+	end procedure buflen9;
 	
 	
 	begin
@@ -193,13 +243,18 @@ begin
 
         buflen3;
 
-        wait for TIME_DELTA;
-
+        wait until rising_edge(memRed);
+        wait for CLK_PERIOD;
         
         buflen8;
 
+        wait until rising_edge(memRed);
+        wait for CLK_PERIOD;
+        
+        buflen9;
 
-        wait for 50*TIME_DELTA;
+        wait until rising_edge(memRed);
+        wait for 5*TIME_DELTA;
 
 		-- Indicate end of tb
 		sim_finished <= true;

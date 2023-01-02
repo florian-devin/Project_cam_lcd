@@ -27,7 +27,7 @@ architecture test of ReadMemCtrl_tb is
     signal bufferLength             : std_logic_vector(31 downto 0);             -- Number of pixels to read in memory
     signal memWritten               : std_logic;                                 -- Sync signal from IP_CAM
     signal pixCounter               : std_logic_vector(31 downto 0);              -- Nb of pixel read since last start of frame
-        
+    signal BurstCounter				: std_logic_vector(3 downto 0);    
 
 	-- Outputs
     signal read            : std_logic;                                        -- Avalon Bus read 
@@ -62,7 +62,8 @@ begin
         startAddress          => startAddress,         
         bufferLength          => bufferLength,         
         memWritten            => memWritten,           
-        pixCounter            => pixCounter,              
+        pixCounter            => pixCounter,
+		BurstCounter		  => BurstCounter,              
         read                  => read,                 
         im_read				  => isig_read, 
 		burstcount            => burstcount,
@@ -119,6 +120,7 @@ begin
 		--SyncMasterFIFO2
 		MasterFIFO_empty <= '1';
 		pixCounter <= std_logic_vector(unsigned(pixCounter) + unsigned(nPixToCount)); 
+		BurstCounter <= burstcount;
 		wait until rising_edge(clk);
 		MasterFIFO_empty <= '0';
 		wait for CLK_PERIOD/2;
@@ -138,7 +140,8 @@ begin
         bufferLength            <= x"00000003";
         memWritten              <= '0';
         pixCounter              <= x"00000000";
-        
+        BurstCounter			<= (others => '0');
+
 		wait until rising_edge(clk);
 		
 	-- Reset the module

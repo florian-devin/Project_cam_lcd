@@ -19,7 +19,7 @@ entity ReadMemCtrl is
         bufferLength            : in std_logic_vector(31 downto 0);             -- Number of pixels to read in memory
         memWritten              : in std_logic;                                 -- Sync signal from IP_CAM
         pixCounter              : in std_logic_vector(31 downto 0);              -- Nb of pixel read since last start of frame
-        
+        BurstCounter            : in std_logic_vector(3 downto 0);
 
         --Outputs
         read            : out std_logic;                                        -- Avalon Bus read 
@@ -129,7 +129,7 @@ begin
                     
                     when SyncMasterFIFO1 =>
                         if MasterFIFO_empty = '0' then
-                            current_state <= UpdateAddress;                     -- Master FIFO is not empty, at least one data has been sent, go to idle
+                            current_state <= UpdateAddress;                     -- Master FIFO is not empty, at least one data has been sent
                         else
                             current_state <= SyncMasterFIFO1;                   -- Master FIFO still hasn't received any data from read, wait
                         end if;
@@ -140,7 +140,9 @@ begin
 
                     when SyncMasterFIFO2 =>
                         if MasterFIFO_empty = '1' then
-                            current_state <= CheckEOL;                          -- Master FIFO has been read and emptied, go to next read                     
+                            if BurstCounter = i_burstcount then
+                                current_state <= CheckEOL;                          -- Master FIFO has been read and emptied, go to next read                     
+                            end if;
                         else
                             current_state <= SyncMasterFIFO2;                   -- Master FIFO operation not finished 
                         end if;
