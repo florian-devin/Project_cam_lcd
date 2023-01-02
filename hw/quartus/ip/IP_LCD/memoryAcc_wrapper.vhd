@@ -13,7 +13,6 @@ entity memoryAcc_wrapper is
         waitrequest             : in std_logic;
         readdata                : in std_logic_vector(31 downto 0);
         -- Slave signals
-        globalFIFO_AlmostFull   : in std_logic;                                 -- global FIFO fill info
         startAddress            : in std_logic_vector(31 downto 0);             -- First address of the frame in memory
         bufferLength            : in std_logic_vector(31 downto 0);             -- Number of pixels to read in memory
         -- IP_CAM signal
@@ -35,7 +34,7 @@ entity memoryAcc_wrapper is
 		gFIFO_almost_full	: OUT STD_LOGIC ;
 		gFIFO_empty		    : OUT STD_LOGIC ;
 		gFIFO_full		    : OUT STD_LOGIC
-        
+
     );
 end memoryAcc_wrapper;
 
