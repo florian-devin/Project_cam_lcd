@@ -74,7 +74,7 @@ architecture RTL of lcd_controller is
 	
 begin
 
-	U0 : framegen
+	framegen_inst : framegen
 		port map(
 			clk => clk,
 			nReset => nReset,
@@ -89,7 +89,7 @@ begin
             D => D			
         );
 			
-	U1 : sequencer
+	sequencer_inst : sequencer
 		port map(
 			clk => clk,
 			nReset => nReset,
