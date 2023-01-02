@@ -48,7 +48,7 @@ architecture  behav of IP_CAM_Frame is
     -- FIFO related internal signals
     signal data_red    :  std_logic_vector (4 DOWNTO 0);
     signal data_green  :  std_logic_vector (5 DOWNTO 0);
-    signal data_interface  :  std_logic_vector (31 DOWNTO 0);
+    signal data_interface  :  std_logic_vector (31 DOWNTO 0) := std_logic_vector(to_signed(0, 32));
 
     signal read_red    :   std_logic;
     signal read_green  :   std_logic;
@@ -129,6 +129,8 @@ end process;
 process(clk, nReset) -- Sample data based on camera clock
 variable GREEN2   :   integer := 0;
 variable GREEN1   :   integer := 0;
+variable pixel_count    :   integer :=0;
+variable FIFO_count :   integer :=0;
 begin
 
     -- Reset send to ST_IDLE state
@@ -143,7 +145,7 @@ begin
         case state is
 
             -- Wait for acquisition to start
-        -- ST_IDLE
+--------------------------------------------------------------
             when ST_IDLE =>
             CAM_reset <= '1';
             capture_done <= '0';
@@ -153,7 +155,7 @@ begin
             else null;
             end if;
         
-        -- ST_WAIT_VSYNC
+--------------------------------------------------------------
             -- Wait for Vsync
             when ST_WAIT_VSYNC =>
             old_hsync <= Hsync;
@@ -164,7 +166,7 @@ begin
             end if;
             old_vsync <= Vsync;
 
-            -- Wait for Hsync
+--------------------------------------------------------------
             when ST_WAIT_HSYNC =>
             new_frame <= '0';
             if Hsync = '1' and old_hsync = '0' then
@@ -174,6 +176,7 @@ begin
             end if;
             old_hsync <= Hsync;
 
+--------------------------------------------------------------
             -- Data read is RED pixel
             when ST_SAMPLE_RED =>
             -- Wait for PXL_CLK to be rising edge
@@ -187,7 +190,7 @@ begin
             else null;
             end if;
             PXL_CLK_old <= pxl_clk;
-
+--------------------------------------------------------------
             -- Data read is GREEN1 pixel
             when ST_SAMPLE_GREEN1 =>
             if PXL_CLK_old = '0' and pxl_clk = '1' then
@@ -205,7 +208,7 @@ begin
             else null;
             end if;
             PXL_CLK_old <= pxl_clk;
-
+--------------------------------------------------------------
             -- Wait for new line to start
             when ST_WAIT_LINE_CHANGE_GB =>
             if Hsync = '1' and old_hsync ='0' then
@@ -213,7 +216,7 @@ begin
             else null;
             end if;
             old_hsync <= Hsync;
-
+--------------------------------------------------------------
             -- Data read is GREEN2 pixel
             when ST_SAMPLE_GREEN2 =>
             if PXL_CLK_old = '0' and pxl_clk = '1' then
@@ -223,7 +226,7 @@ begin
             else null;
             end if;
             PXL_CLK_old <= pxl_clk;
-
+--------------------------------------------------------------
             -- Data is blue, need to convert the whole pixel into 16 bits
             when ST_SAMPLE_BLUE =>
             if PXL_CLK_old = '0' and pxl_clk = '1' then
@@ -233,7 +236,7 @@ begin
             else null;
             end if;
             PXL_CLK_old <= pxl_clk;
-
+--------------------------------------------------------------
             -- Convert R G1 G2 & B data into 16-bits value
             -- Get Green and Red values from FIFOs
             when ST_CONVERT =>
@@ -244,22 +247,34 @@ begin
             RED     <=  output_red;
             GREEN1 := (GREEN1 + GREEN2) / 2;
             GREEN <= std_logic_vector(to_signed(GREEN1, 6));
-            
-            data_interface(4 downto 0) <= BLUE;
-            data_interface(10 downto 5) <= GREEN;
-            data_interface(15 downto 11) <= RED;
-            
-            write_interface <= '1';
-            state <= ST_SEND;
 
+            if pixel_count = 0 then
+                data_interface(4 downto 0) <= BLUE;
+                data_interface(10 downto 5) <= GREEN;
+                data_interface(15 downto 11) <= RED;
+                pixel_count := 1;
+            else
+                data_interface(20 downto 16) <= BLUE;
+                data_interface(26 downto 21) <= GREEN;
+                data_interface(31 downto 27) <= RED;
+                pixel_count := 0;
+                write_interface <= '1';
+            end if;
+            state <= ST_SEND;
+--------------------------------------------------------------
             when ST_SEND =>
             write_interface <= '0';
             read_green <= '0';
             read_red <= '0';
-            -- Tell master unit a data is available
-            new_data <= '1';
-            state <= ST_DATA_CONTINUE;
 
+            -- Tell master unit a data is available
+            if pixel_count = 0 then
+                new_data <= '1';
+            else null;
+            end if;
+
+            state <= ST_DATA_CONTINUE;
+--------------------------------------------------------------
             when ST_DATA_CONTINUE =>
             new_data <= '0';
 
@@ -275,7 +290,7 @@ begin
             -- Frame finished
             else state <= ST_END;
             end if;
-
+--------------------------------------------------------------
             -- Wait for new line to start
             when ST_WAIT_LINE_CHANGE_RG =>
             if Hsync = '1' and old_hsync ='0' then
@@ -283,11 +298,11 @@ begin
             else null;
             end if;
             old_hsync <= Hsync;
-
+--------------------------------------------------------------
             when ST_END =>
             capture_done <= '1';
             state <= ST_IDLE;
-
+--------------------------------------------------------------
             -- In case of unexpected state, send to ST_IDLE
             when others => state <= ST_IDLE;
         end case;
