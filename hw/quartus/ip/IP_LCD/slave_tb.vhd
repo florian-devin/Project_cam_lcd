@@ -3,10 +3,10 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 --use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
-entity lcd_controller_tb is
-end lcd_controller_tb;
+entity slave_tb is
+end slave_tb;
 
-architecture test of lcd_controller_tb is
+architecture test of slave_tb is
 
 	signal clk : std_logic;
 	signal nReset : std_logic;
@@ -66,7 +66,7 @@ begin
 
         wait for 20 ns;
         nReset <= '1';
-        
+
 		wait;
 	end process;
 	

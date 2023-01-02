@@ -75,7 +75,6 @@ architecture RTL of slave is
 		rdreq		: IN STD_LOGIC ;
 		wrreq		: IN STD_LOGIC ;
 		empty		: OUT STD_LOGIC ;
-		full		: OUT STD_LOGIC ;
 		q		: OUT STD_LOGIC_VECTOR (8 DOWNTO 0)
     );
     end component slave_fifo;
@@ -132,6 +131,11 @@ begin
 		empty	 => slaveFifoEmpty_i,
 		q	 => q_i
 	);
+
+    process(nReset, clk)
+    begin
+        n_aclr <= NOT nReset;
+    end process;
 	
 end RTL;
 				
