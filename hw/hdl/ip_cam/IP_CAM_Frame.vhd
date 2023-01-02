@@ -80,7 +80,7 @@ architecture  behav of IP_CAM_Frame is
                         ST_SAMPLE_BLUE,
                         ST_CONVERT,
                         ST_SEND,
-                        ST_SENT_ACK,
+                        ST_DATA_CONTINUE,
                         ST_END);
     signal state   : STATE_TYPE;
 begin
@@ -110,7 +110,7 @@ begin
     port map(
         clock => clk,
         data => data_interface,
-        rdreq => read_interface,
+        rdreq => ack,
         wrreq => write_interface,
         --full => full_interface,
         --empty => empty_interface,
@@ -137,7 +137,7 @@ begin
         new_frame <= '0';
         state <= ST_IDLE;
 
-    elsif rising_edge(pxl_clk) then
+    elsif rising_edge(clk) then
         case state is
 
             -- Wait for acquisition to start
@@ -231,25 +231,15 @@ begin
             state <= ST_SEND;
 
             when ST_SEND =>
-            if write_interface = '1' then
-                write_interface <= '0';
-            end if;
-            
+            write_interface <= '0';
             read_green <= '0';
             read_red <= '0';
-            -- Tell master unit a data is sent
+            -- Tell master unit a data is available
             new_data <= '1';
+            state <= ST_DATA_CONTINUE;
 
-            -- Wait for data to be received to go next data
-            if ack = '1' then
-                read_interface <= '1';
-                new_data <= '0';
-                state <= ST_SENT_ACK;
-            else null;
-            end if;
-
-            when ST_SENT_ACK =>
-            read_interface <= '0';
+            when ST_DATA_CONTINUE =>
+            new_data <= '0';
 
             -- Line finished
             if Vsync = '1' and Hsync = '0' then
@@ -281,5 +271,6 @@ begin
         end case;
     end if;
 end process;
+
 
 end behav;
