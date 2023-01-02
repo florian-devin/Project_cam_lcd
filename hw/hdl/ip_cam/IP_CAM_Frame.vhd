@@ -248,6 +248,9 @@ begin
             GREEN1 := (GREEN1 + GREEN2) / 2;
             GREEN <= std_logic_vector(to_signed(GREEN1, 6));
 
+            state <= ST_SEND;
+--------------------------------------------------------------
+            when ST_SEND =>
             if pixel_count = 0 then
                 data_interface(4 downto 0) <= BLUE;
                 data_interface(10 downto 5) <= GREEN;
@@ -260,10 +263,7 @@ begin
                 pixel_count := 0;
                 write_interface <= '1';
             end if;
-            state <= ST_SEND;
---------------------------------------------------------------
-            when ST_SEND =>
-            write_interface <= '0';
+            
             read_green <= '0';
             read_red <= '0';
 
@@ -277,6 +277,7 @@ begin
 --------------------------------------------------------------
             when ST_DATA_CONTINUE =>
             --new_data <= '0';
+            write_interface <= '0';
 
             -- Line finished
             if Vsync = '1' and Hsync = '0' then
