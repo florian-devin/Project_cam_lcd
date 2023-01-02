@@ -233,8 +233,11 @@ begin
             -- Tell master unit a data is sent
             new_data <= '1';
 
+            read_data <= '1';
+
             -- Wait for data to be received to go next data
             if ack = '1' then
+                read_data <= '0';
                 new_data <= '0';
             else null;
             end if;
