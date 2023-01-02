@@ -18,12 +18,12 @@ entity IP_CAM_Frame is
         pxl_clk     :   in  std_logic;
 
         -- IP_CAM_AVSlave interface
-        capture_done:   out std_logic;
+        capture_done:   out std_logic := '0';
         acquisition :   in  std_logic;
 
         -- IP_CAM_AVMaster interface
-        new_data    :   out std_logic;
-        new_frame   :   out std_logic;
+        new_data    :   out std_logic := '0';
+        new_frame   :   out std_logic := '0';
         ack         :   in  std_logic;
         --Send to FIFO data        :   out std_logic_vector(15 downto 0) := std_logic_vector(to_signed(0, 16)); 
 
@@ -128,7 +128,10 @@ begin
 
     -- Reset send to ST_IDLE state
     if nReset='0' then
+        capture_done <= '0';
+        new_data <= '0';
         CAM_reset <= '0';
+        new_frame <= '0';
         state <= ST_IDLE;
 
     elsif rising_edge(pxl_clk) then
