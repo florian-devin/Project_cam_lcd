@@ -28,8 +28,7 @@ entity IP_CAM_Frame is
         --Send to FIFO data        :   out std_logic_vector(15 downto 0) := std_logic_vector(to_signed(0, 16)); 
 
         -- Output FIFO
-        output_interface    :   out   std_logic_vector (31 DOWNTO 0);
-        read_pixel  :   in  std_logic
+        output_interface    :   out   std_logic_vector (31 DOWNTO 0)
 
     );
 end IP_CAM_Frame;
@@ -48,6 +47,7 @@ architecture  behav of IP_CAM_Frame is
 
     signal read_red    :   std_logic;
     signal read_green  :   std_logic;
+    signal read_interface  :   std_logic;
 
     signal write_red   :   std_logic;
     signal write_green :   std_logic;
@@ -106,7 +106,7 @@ begin
     port map(
         clock => clk,
         data => data_interface,
-        rdreq => read_pixel,
+        rdreq => read_interface,
         wrreq => write_interface,
         --full => full_interface,
         --empty => empty_interface,
@@ -233,11 +233,11 @@ begin
             -- Tell master unit a data is sent
             new_data <= '1';
 
-            read_data <= '1';
+            read_interface <= '1';
 
             -- Wait for data to be received to go next data
             if ack = '1' then
-                read_data <= '0';
+                read_interface <= '0';
                 new_data <= '0';
             else null;
             end if;
