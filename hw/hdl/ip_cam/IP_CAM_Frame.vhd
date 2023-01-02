@@ -171,22 +171,18 @@ begin
 
             -- Data read is RED pixel
             when ST_SAMPLE_RED =>
-            write_green <= '0';
-            -- Checks if new line
-            if Hsync = '0' then
-                state <= ST_WAIT_LINE_CHANGE_GB;
-            else            
-                -- Put data in RED_FIFO (5 bits only, need to truncate)
-                data_red <= CAM_data(4 downto 0); -- Data available on port
-                write_red <= '1'; -- Data sent to FIFO
-                state <= ST_SAMPLE_GREEN1;
-            end if;
+            write_green <= '0';        
+            -- Put data in RED_FIFO (5 bits only, need to truncate)
+            data_red <= CAM_data(4 downto 0); -- Data available on port
+            write_red <= '1'; -- Data sent to FIFO
+            state <= ST_SAMPLE_GREEN1;
 
             -- Data read is GREEN1 pixel
             when ST_SAMPLE_GREEN1 =>
             write_red <= '0';
             -- Checks if new line
             if Hsync = '0' then
+                old_hsync <= Hsync;
                 state <= ST_WAIT_LINE_CHANGE_GB;
             else            
                 -- Put data in GREEN_FIFO (6 bits)
@@ -197,21 +193,18 @@ begin
 
             -- Wait for new line to start
             when ST_WAIT_LINE_CHANGE_GB =>
-            if Hsync = '1' then
+            if Hsync = '1' and old_hsync ='0' then
                 state <= ST_SAMPLE_GREEN2;
             else null;
             end if;
+            old_hsync <= Hsync;
 
             -- Data read is GREEN2 pixel
             when ST_SAMPLE_GREEN2 =>
-            -- Checks if new line
-            if Hsync = '0' then
-                state <= ST_WAIT_LINE_CHANGE_RG;
-            else            
+        
                 -- Store data
                 GREEN2 := to_integer(signed(CAM_data));
                 state <= ST_SAMPLE_BLUE;
-            end if;
 
             -- Data is blue, need to convert the whole pixel into 16 bits
             when ST_SAMPLE_BLUE =>
@@ -257,24 +250,26 @@ begin
             when ST_SENT_ACK =>
             read_interface <= '0';
 
-                -- Line finished
-                if Vsync = '1' and Hsync = '0' then
-                    state <= ST_WAIT_LINE_CHANGE_RG;
+            -- Line finished
+            if Vsync = '1' and Hsync = '0' then
+                old_hsync <= Hsync;
+                state <= ST_WAIT_LINE_CHANGE_RG;
 
-                -- Line still going
-                elsif Vsync = '1' and Hsync = '1' then
-                    state <= ST_SAMPLE_GREEN2;
+            -- Line still going
+            elsif Vsync = '1' and Hsync = '1' then
+                state <= ST_SAMPLE_GREEN2;
 
-                -- Frame finished
-                else state <= ST_END;
-                end if;
+            -- Frame finished
+            else state <= ST_END;
+            end if;
 
             -- Wait for new line to start
             when ST_WAIT_LINE_CHANGE_RG =>
-            if Hsync = '1' then
+            if Hsync = '1' and old_hsync ='0' then
                 state <= ST_SAMPLE_RED;
             else null;
             end if;
+            old_hsync <= Hsync;
 
             when ST_END =>
             capture_done <= '1';
