@@ -22,10 +22,10 @@ entity IP_CAM_Frame is
         acquisition :   in  std_logic;
 
         -- IP_CAM_AVMaster interface
-        new_data    :   out std_logic := '0';
+        --new_data    :   out std_logic := '0';
         new_frame   :   out std_logic := '0';
         ack         :   in  std_logic;
-        --Send to FIFO data        :   out std_logic_vector(15 downto 0) := std_logic_vector(to_signed(0, 16)); 
+        empty_interface :   out   std_logic;
 
         -- Output FIFO
         output_interface    :   out   std_logic_vector (31 DOWNTO 0)
@@ -66,7 +66,7 @@ architecture  behav of IP_CAM_Frame is
     signal output_green    :   std_logic_vector (5 DOWNTO 0);
     
 
-    --empty_interface :   std_logic ;
+    
     --usedw_interface :   std_logic_vector (7 DOWNTO 0)
 
 
@@ -115,7 +115,7 @@ begin
         rdreq => ack,
         wrreq => write_interface,
         --full => full_interface,
-        --empty => empty_interface,
+        empty => empty_interface,
         q => output_interface
         --usedw   => usedw_interface
     );
@@ -136,7 +136,7 @@ begin
     -- Reset send to ST_IDLE state
     if nReset = '0' then
         capture_done <= '0';
-        new_data <= '0';
+        --new_data <= '0';
         CAM_reset <= '0';
         new_frame <= '0';
         state <= ST_IDLE;
@@ -268,15 +268,15 @@ begin
             read_red <= '0';
 
             -- Tell master unit a data is available
-            if pixel_count = 0 then
-                new_data <= '1';
-            else null;
-            end if;
+            --if pixel_count = 0 then
+                --new_data <= '1';
+            --else null;
+            --end if;
 
             state <= ST_DATA_CONTINUE;
 --------------------------------------------------------------
             when ST_DATA_CONTINUE =>
-            new_data <= '0';
+            --new_data <= '0';
 
             -- Line finished
             if Vsync = '1' and Hsync = '0' then
