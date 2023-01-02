@@ -14,7 +14,7 @@ entity IP_CAM_Frame is
         Hsync       :   in  std_logic;
         Vsync       :   in  std_logic;
         Mclk        :   out  std_logic;
-        CAM_reset   :   out std_logic;
+        CAM_reset   :   out std_logic := '1';
         pxl_clk     :   in  std_logic;
 
         -- IP_CAM_AVSlave interface
@@ -127,6 +127,7 @@ begin
 
     -- Reset send to ST_IDLE state
     if nReset='0' then
+        CAM_reset = '0';
         state <= ST_IDLE;
 
     elsif rising_edge(pxl_clk) then
@@ -134,6 +135,7 @@ begin
 
             -- Wait for acquisition to start
             when ST_IDLE =>
+            CAM_reset = '1';
             capture_done <= '0';
             if acquisition = '1' then
                 state <= ST_WAIT_VSYNC;
@@ -233,15 +235,18 @@ begin
             -- Tell master unit a data is sent
             new_data <= '1';
 
-            read_interface <= '1';
-
             -- Wait for data to be received to go next data
             if ack = '1' then
-                read_interface <= '0';
+                read_interface <= '1';
                 new_data <= '0';
             else null;
             end if;
 
+            if read_interface <= '1' and new_data = '0' then
+                read_interface <= '0';
+            else null;
+            end if;
+            
             -- Line finished
             if Vsync = '1' and Hsync = '0' then
                 state <= ST_WAIT_LINE_CHANGE_RG;
