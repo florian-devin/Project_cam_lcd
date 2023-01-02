@@ -68,7 +68,9 @@ architecture  behav of IP_CAM_Frame is
     -- Declare state names and state variable
     type STATE_TYPE IS (ST_IDLE,
                         ST_WAIT_VSYNC,
+                        ST_WAIT_VSYNC_REDGE,
                         ST_WAIT_HSYNC,
+                        ST_WAIT_HSYNC_REDGE,
                         ST_SAMPLE_RED,
                         ST_SAMPLE_GREEN1,
                         ST_WAIT_LINE_CHANGE_GB,
@@ -146,8 +148,15 @@ begin
             else null;
             end if;
 
-            -- Wait for Vsync (FRAME_VALID)
+            -- Wait for Vsync at 0 to prepare rising edge detection
             when ST_WAIT_VSYNC =>
+            if Vsync = '0' then
+                state <= ST_WAIT_VSYNC_REDGE;
+            else null;
+            end if;
+
+            -- Wait for Vsync rising_edge
+            when ST_WAIT_VSYNC_REDGE =>
             if Vsync = '1' then
                 -- Tell master unit a new frame is being read
                 new_frame <= '1';
@@ -155,8 +164,16 @@ begin
             else null;
             end if;
 
-            -- Wait for Hsync (LINE_VALID)
+            -- Wait for Hsync at 0 to prepare rising edge detection
             when ST_WAIT_HSYNC =>
+            new_frame <= '0';
+            if Hsync = '0' then
+                state <= ST_WAIT_HSYNC_REDGE;
+            else null;
+            end if;
+
+            -- Wait for Hsync rising_edge
+            when ST_WAIT_HSYNC_REDGE =>
             new_frame <= '0';
             if Hsync = '1' then
                 state <= ST_SAMPLE_RED;
