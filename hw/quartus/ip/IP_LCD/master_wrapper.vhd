@@ -122,8 +122,6 @@ architecture arch of master_wrapper is
     end component mFIFO_wrapper;
 	
     -- Internal signals
-
-	signal iBit_sent : std_logic;
             
     signal isig_pixCounter          : std_logic_vector(31 downto 0);              -- Nb of pixel read since last start of frame                
     signal isig_nPixToCount         : std_logic_vector(7 downto 0);                     -- Nb of pixel to read in the current burstread           
