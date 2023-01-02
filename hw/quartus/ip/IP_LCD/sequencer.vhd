@@ -9,9 +9,8 @@ entity sequencer is
 		nReset : in std_logic;
 
 		updateCmd : in std_logic;
-        regCmd : in std_logic_vector(15 downto 0);
         updateParam : in std_logic;
-        regParam : in std_logic_vector(15 downto 0);
+        regData : in std_logic_vector(15 downto 0);
         FifoEmpty : in std_logic;
         frame_finished : in std_logic;
         RdData : in std_logic_vector(15 downto 0);
@@ -58,12 +57,12 @@ begin
                     RdFifo_i <= '0';
                     seqDone_i <= '0';
                     if updateCmd = '1' then
-                        dataSeq_i <= regCmd;
+                        dataSeq_i <= regData;
                         framegenEnabled_i <= '1';
                         D_CX_Seq_i <= '0';
                         current_state <= waitFramegen;
                     elsif updateParam = '1' then
-                        dataSeq_i <= regParam;
+                        dataSeq_i <= regData;
                         framegenEnabled_i <= '1';
                         D_CX_Seq_i <= '1';
                         current_state <= waitFramegen;

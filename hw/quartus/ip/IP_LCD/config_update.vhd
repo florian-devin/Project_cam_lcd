@@ -9,25 +9,27 @@ entity config_update is
 		nReset : in std_logic;
 
 		seqDone : in std_logic;
+		SlaveFifoEmpty : in std_logic;
+		q : in std_logic_vector(8 downto 0);
         
         updateCmd : out std_logic;
-        regCmd : out std_logic_vector(15 downto 0);
         updateParam : out std_logic;
-        regParam : out std_logic_vector(15 downto 0)
+        regData : out std_logic_vector(15 downto 0);
+		rdreq : out std_logic;
 		);
 end config_update;
 
 architecture RTL of config_update is
 
-	type states is (idle, sendData, waitFramegen, tempoData);
+	type states is (idle, askData, receiveData);
 	signal current_state: states;
 	attribute enum_encoding: string;
 	attribute enum_encoding of states: type is "gray";
 
 	signal updateCmd_i : std_logic := '0';
-    signal regCmd_i : std_logic_vector(15 downto 0) := (others => '0');
     signal updateParam_i : std_logic := '0';
-    signal regParam_i : std_logic_vector(15 downto 0) := (others => '0');
+    signal regData_i : std_logic_vector(15 downto 0) := (others => '0');
+	signal rdreq_i : std_logic := '0';
 begin
 
 
@@ -35,17 +37,38 @@ begin
 	begin
     		if nReset = '0' then
                 updateCmd_i <= '0';
-                regCmd_i <= (others => '0');
                 updateParam_i <= '0';
-                regParam_i <= (others => '0');
+                regData_i <= (others => '0');
+				rdreq_i <= '0';
         		current_state <= idle;
 				
     		elsif rising_edge(clk) then
 
 				case current_state is
 		
-				when idle =>    
-        
+				when idle =>
+					regData_i <= (others => '0');
+					updateCmd_i <= '0';
+					updateParam_i <= '0';
+					rdreq_i <= '0'; 
+					if SlaveFifoEmpty = '0' then
+						rdreq_i <= '1';
+						current_state <= askData;
+					end if;
+
+				when askData =>
+					rdreq_i <= '0';
+					current_state <= receiveData;
+
+				when receiveData =>
+					regData_i <= q(7 downto 0);
+					if q(8) = '0' then
+						updateCmd_i <= '1';
+					else
+						updateParam_i <= '1';
+					end if;
+					current_state <= idle;
+
                 when others =>
                     current_state <= idle;
                 end case;
@@ -54,9 +77,9 @@ begin
 	end process;
 
     updateCmd <= updateCmd_i;
-    regCmd <= regCmd_i;
     updateParam <= updateParam_i;
-    regParam <= regParam_i;
+    regData <= regData_i;
+	rdreq <= rdreq_i;
 
 end RTL;
 

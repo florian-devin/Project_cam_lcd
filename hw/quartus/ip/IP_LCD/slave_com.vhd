@@ -45,7 +45,7 @@ architecture RTL of slave_com is
     signal iNewParam : std_logic := '0';
 begin
 
-    process(nReset, iregCfgCmd, iregCfgParam)
+    process(clk, nReset, iregCfgCmd, iregCfgParam, iregMemStartAddress, iregMemBufferLength)
     begin
         if nReset = '0' then
             iBufferLength <= (others => '0');
