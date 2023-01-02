@@ -124,13 +124,13 @@ begin
     Mclk <= clk;
 end process;
 
-process(pxl_clk, nReset) -- Sample data based on camera clock
+process(clk, nReset) -- Sample data based on camera clock
 variable GREEN2   :   integer := 0;
 variable GREEN1   :   integer := 0;
 begin
 
     -- Reset send to ST_IDLE state
-    if nReset='0' then
+    if nReset = '0' then
         capture_done <= '0';
         new_data <= '0';
         CAM_reset <= '0';
