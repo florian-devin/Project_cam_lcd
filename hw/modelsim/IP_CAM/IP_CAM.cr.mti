@@ -1,0 +1,92 @@
+C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/hdl/ip_cam/FIFO_red.vhd {1 {vcom -work work -2002 -explicit -stats=none C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/hdl/ip_cam/FIFO_red.vhd
+Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Compiling entity FIFO_red
+-- Compiling architecture SYN of fifo_red
+
+} {} {}} C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/hdl/ip_cam/IP_CAM_AVSlave.vhd {1 {vcom -work work -2002 -explicit -stats=none C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/hdl/ip_cam/IP_CAM_AVSlave.vhd
+Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Loading package NUMERIC_STD
+-- Compiling entity ip_cam_avslave
+-- Compiling architecture comp of ip_cam_avslave
+
+} {} {}} C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/hdl/ip_cam/IP_CAM_Frame.vhd {1 {vcom -work work -2002 -explicit -stats=none C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/hdl/ip_cam/IP_CAM_Frame.vhd
+Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Loading package NUMERIC_STD
+-- Compiling entity IP_CAM_Frame
+-- Compiling architecture behav of IP_CAM_Frame
+-- Loading entity FIFO_red
+-- Loading entity FIFO_GREEN1
+-- Loading entity FIFO_interface
+
+} {} {}} C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/hdl/ip_cam/IP_CAM_Top.vhd {1 {vcom -work IP_CAM -2002 -explicit -stats=none C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/hdl/ip_cam/IP_CAM_Top.vhd
+Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Compiling entity IP_CAM_Top
+-- Compiling architecture rtl of IP_CAM_Top
+-- Loading package NUMERIC_STD
+-- Loading entity ip_cam_avslave
+-- Loading entity ip_cam_avmaster
+-- Loading entity IP_CAM_Frame
+
+} {} {}} C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/hdl/ip_cam/FIFO_interface.vhd {1 {vcom -work work -2002 -explicit -stats=none C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/hdl/ip_cam/FIFO_interface.vhd
+Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Compiling entity FIFO_interface
+-- Compiling architecture SYN of fifo_interface
+
+} {} {}} C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/testbench/ip_cam_tb/IP_CAM_tb_top.vhd {1 {vcom -work work -2002 -explicit -stats=none C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/testbench/ip_cam_tb/IP_CAM_tb_top.vhd
+Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Loading package NUMERIC_STD
+-- Loading package MATH_REAL
+-- Loading package cmos_sensor_output_generator_constants
+-- Compiling entity ip_cam_tb
+-- Compiling architecture bench of ip_cam_tb
+-- Loading entity cmos_sensor_output_generator
+-- Loading entity IP_CAM_Top
+
+} {} {}} C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/hdl/ip_cam/FIFO_GREEN1.vhd {1 {vcom -work work -2002 -explicit -stats=none C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/hdl/ip_cam/FIFO_GREEN1.vhd
+Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Compiling entity FIFO_GREEN1
+-- Compiling architecture SYN of fifo_green1
+
+} {} {}} C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/quartus/ip/cmos_sensor_output_generator/hdl/cmos_sensor_output_generator_constants.vhd {1 {vcom -work work -2002 -explicit -stats=none C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/quartus/ip/cmos_sensor_output_generator/hdl/cmos_sensor_output_generator_constants.vhd
+Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Loading package MATH_REAL
+-- Compiling package cmos_sensor_output_generator_constants
+-- Compiling package body cmos_sensor_output_generator_constants
+-- Loading package cmos_sensor_output_generator_constants
+
+} {} {}} C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/quartus/ip/cmos_sensor_output_generator/hdl/cmos_sensor_output_generator.vhd {1 {vcom -work work -2002 -explicit -stats=none C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/quartus/ip/cmos_sensor_output_generator/hdl/cmos_sensor_output_generator.vhd
+Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Loading package NUMERIC_STD
+-- Loading package MATH_REAL
+-- Loading package cmos_sensor_output_generator_constants
+-- Compiling entity cmos_sensor_output_generator
+-- Compiling architecture rtl of cmos_sensor_output_generator
+
+} {} {}}

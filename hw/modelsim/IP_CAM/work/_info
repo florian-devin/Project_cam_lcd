@@ -1,0 +1,143 @@
+m255
+K4
+z2
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+Z0 dC:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/modelsim/IP_CAM
+Ecmos_sensor_output_generator
+Z1 w1671177184
+Z2 DPx4 ieee 9 math_real 0 22 Sk6CSihbPL<f[^Shm]=KX0
+Z3 DPx4 work 38 cmos_sensor_output_generator_constants 0 22 fgXUi?FhN[hO5_RK;BU5S2
+Z4 DPx4 ieee 11 numeric_std 0 22 :ASDNFgHXf_ih3J@9F3Ze1
+Z5 DPx3 std 6 textio 0 22 zE1`LPoLg^DX3Oz^4Fj1K3
+Z6 DPx4 ieee 14 std_logic_1164 0 22 eNV`TJ_GofJTzYa?f<@Oe1
+R0
+Z7 8C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/quartus/ip/cmos_sensor_output_generator/hdl/cmos_sensor_output_generator.vhd
+Z8 FC:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/quartus/ip/cmos_sensor_output_generator/hdl/cmos_sensor_output_generator.vhd
+l0
+L7
+V;W10=Bc[:LZIl^Zj;JTLb0
+!s100 C8`FK^G0k[;A4ZVEe856F3
+Z9 OV;C;10.5b;63
+32
+Z10 !s110 1672656905
+!i10b 1
+Z11 !s108 1672656905.000000
+Z12 !s90 -reportprogress|300|-work|work|-2002|-explicit|-stats=none|C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/quartus/ip/cmos_sensor_output_generator/hdl/cmos_sensor_output_generator.vhd|
+Z13 !s107 C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/quartus/ip/cmos_sensor_output_generator/hdl/cmos_sensor_output_generator.vhd|
+!i113 1
+Z14 o-work work -2002 -explicit
+Z15 tExplicit 1 CvgOpt 0
+Artl
+R2
+R3
+R4
+R5
+R6
+Z16 DEx4 work 28 cmos_sensor_output_generator 0 22 ;W10=Bc[:LZIl^Zj;JTLb0
+l53
+L30
+V5eU7in2__5k992[2Rj]EY3
+!s100 S`Tklb>jdzB:R2PL9o?[]3
+R9
+32
+R10
+!i10b 1
+R11
+R12
+R13
+!i113 1
+R14
+R15
+Pcmos_sensor_output_generator_constants
+R2
+R5
+R6
+R1
+R0
+Z17 8C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/quartus/ip/cmos_sensor_output_generator/hdl/cmos_sensor_output_generator_constants.vhd
+Z18 FC:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/quartus/ip/cmos_sensor_output_generator/hdl/cmos_sensor_output_generator_constants.vhd
+l0
+L5
+VfgXUi?FhN[hO5_RK;BU5S2
+!s100 6WdjE4O:eVD_o5=6kePoW3
+R9
+32
+b1
+R10
+!i10b 1
+R11
+Z19 !s90 -reportprogress|300|-work|work|-2002|-explicit|-stats=none|C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/quartus/ip/cmos_sensor_output_generator/hdl/cmos_sensor_output_generator_constants.vhd|
+Z20 !s107 C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/quartus/ip/cmos_sensor_output_generator/hdl/cmos_sensor_output_generator_constants.vhd|
+!i113 1
+R14
+R15
+Bbody
+R3
+R2
+R5
+R6
+l0
+L41
+VOWO9mdJc0gN`=z`_GFB`R0
+!s100 eeXazRcc0CWg81QXk5`XG2
+R9
+32
+R10
+!i10b 1
+R11
+R19
+R20
+!i113 1
+R14
+R15
+Etb_cmos_sensor_output_generator
+Z21 w1672656895
+R2
+R3
+R4
+R5
+R6
+R0
+Z22 8C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/quartus/ip/cmos_sensor_output_generator/tb/tb_cmos_sensor_output_generator.vhd
+Z23 FC:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/quartus/ip/cmos_sensor_output_generator/tb/tb_cmos_sensor_output_generator.vhd
+l0
+L7
+V^2RVWW8>Y@Vc0D2C2Qb2V1
+!s100 0cS;2P0NZ;XBYEdgOC?he3
+R9
+32
+R10
+!i10b 1
+R11
+Z24 !s90 -reportprogress|300|-work|work|-2002|-explicit|-stats=none|C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/quartus/ip/cmos_sensor_output_generator/tb/tb_cmos_sensor_output_generator.vhd|
+Z25 !s107 C:/EPFL/Embeded_System/Lab4/Project_cam_lcd/hw/quartus/ip/cmos_sensor_output_generator/tb/tb_cmos_sensor_output_generator.vhd|
+!i113 1
+R14
+R15
+Atest
+R16
+R2
+R3
+R4
+R5
+R6
+Z26 DEx4 work 31 tb_cmos_sensor_output_generator 0 22 ^2RVWW8>Y@Vc0D2C2Qb2V1
+l41
+L10
+VnZV]28K^_KoPYLdcP=C<92
+!s100 =O<WNc8A5^oT2;OZjP58e0
+R9
+32
+R10
+!i10b 1
+R11
+R24
+R25
+!i113 1
+R14
+R15
