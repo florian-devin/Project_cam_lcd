@@ -92,12 +92,41 @@ begin
 		
 		wait for CLK_PERIOD/2;
 		nReset <= '1';
-	end procedure async_reset;	
+	end procedure async_reset;
+
+    procedure avalonWrite(constant addr : in natural;
+                          constant data : in natural) is
+    begin
+
+        addressSlave <= std_logic_vector(to_unsigned(addr, 3));
+        writedata <= std_logic_vector(to_unsigned(data, 32));
+        write <= '1';
+        wait for 20 ns;
+        write <= '0';
+        wait for 20 ns;
+
+    end procedure avalonWrite;
+
+    procedure avalonRead(constant addr : in natural) is
+    begin
+
+        addressSlave <= std_logic_vector(to_unsigned(addr, 3));
+        readSlave <= '1';
+        wait for 20 ns;
+        readSlave <= '0';
+        wait for 20 ns;
+
+    end procedure avalonRead;
 	
 	begin
 	
     async_reset;
-    
+
+    wait for 20 ns;
+    avalonWrite(1, 16#00000B0A#);
+    avalonWrite(2, 16#00000003#);
+
+    wait;
 
 	end process simulation;
 	
