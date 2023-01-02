@@ -77,6 +77,7 @@ architecture  behav of IP_CAM_Frame is
                         ST_SAMPLE_BLUE,
                         ST_CONVERT,
                         ST_SEND,
+                        ST_SENT_ACK,
                         ST_END);
     signal state   : STATE_TYPE;
 begin
@@ -127,7 +128,7 @@ begin
 
     -- Reset send to ST_IDLE state
     if nReset='0' then
-        CAM_reset = '0';
+        CAM_reset <= '0';
         state <= ST_IDLE;
 
     elsif rising_edge(pxl_clk) then
@@ -135,7 +136,7 @@ begin
 
             -- Wait for acquisition to start
             when ST_IDLE =>
-            CAM_reset = '1';
+            CAM_reset <= '1';
             capture_done <= '0';
             if acquisition = '1' then
                 state <= ST_WAIT_VSYNC;
@@ -239,25 +240,24 @@ begin
             if ack = '1' then
                 read_interface <= '1';
                 new_data <= '0';
+                state <= ST_SENT_ACK;
             else null;
             end if;
 
-            if read_interface <= '1' and new_data = '0' then
-                read_interface <= '0';
-            else null;
-            end if;
-            
-            -- Line finished
-            if Vsync = '1' and Hsync = '0' then
-                state <= ST_WAIT_LINE_CHANGE_RG;
+            when ST_SENT_ACK =>
+            read_interface <= '0';
 
-            -- Line still going
-            elsif Vsync = '1' and Hsync = '1' then
-                state <= ST_SAMPLE_GREEN2;
+                -- Line finished
+                if Vsync = '1' and Hsync = '0' then
+                    state <= ST_WAIT_LINE_CHANGE_RG;
 
-            -- Frame finished
-            else state <= ST_END;
-            end if;
+                -- Line still going
+                elsif Vsync = '1' and Hsync = '1' then
+                    state <= ST_SAMPLE_GREEN2;
+
+                -- Frame finished
+                else state <= ST_END;
+                end if;
 
             -- Wait for new line to start
             when ST_WAIT_LINE_CHANGE_RG =>
