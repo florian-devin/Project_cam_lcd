@@ -117,17 +117,109 @@ begin
         wait for 20 ns;
 
     end procedure avalonRead;
+
+    procedure buflen3 is
+	begin 
+        avalonWrite(2, 16#00000003#);
+        wait for 40 ns;
+
+        memWritten<= '1';
+        wait for CLK_PERIOD;
+		memWritten <= '0';
+        wait until rising_edge(clk);
+		
+        wait for 2*TIME_DELTA;
+        -- simulate read data valid fom Avalon Bus
+        readdatavalid<= '1';
+        wait for CLK_PERIOD;
+		readdatavalid <= '0';
+        wait until rising_edge(clk);
+
+        wait for 500 ns;
+        -- simulate read data valid fom Avalon Bus
+        readdatavalid<= '1';
+        wait for CLK_PERIOD;
+		readdatavalid <= '0';
+        wait until rising_edge(clk);
+
+
+	end procedure buflen3;
+
+    procedure buflen9 is
+	begin 
+        avalonWrite(2, 16#00000009#);
+        wait for 40 ns;
+
+        memWritten<= '1';
+        wait for CLK_PERIOD;
+		memWritten <= '0';
+        wait until rising_edge(clk);
+		
+        wait for 2*TIME_DELTA;
+        
+        -- simulate read data valid fom Avalon Bus
+        readdatavalid<= '1';
+        wait for CLK_PERIOD;
+		readdatavalid <= '0';
+        wait until rising_edge(clk);
+
+        wait for TIME_DELTA;
+        -- simulate read data valid fom Avalon Bus
+        readdatavalid<= '1';
+        wait for CLK_PERIOD;
+		readdatavalid <= '0';
+        wait until rising_edge(clk);
+
+        wait for TIME_DELTA;
+        -- simulate read data valid fom Avalon Bus
+        readdatavalid<= '1';
+        wait for CLK_PERIOD;
+		readdatavalid <= '0';
+        wait until rising_edge(clk);
+
+        wait for TIME_DELTA;
+        -- simulate read data valid fom Avalon Bus
+        readdatavalid<= '1';
+        wait for CLK_PERIOD;
+		readdatavalid <= '0';
+        waitrequest <= '1';
+        wait until rising_edge(clk);
+
+        wait for 10*TIME_DELTA;
+        waitrequest <= '0';
+        wait until rising_edge (clk);
+        -- simulate read data valid fom Avalon Bus
+        readdatavalid<= '1';
+        wait for CLK_PERIOD;
+		readdatavalid <= '0';
+        wait until rising_edge(clk);
+
+
+	end procedure buflen9;
 	
 	begin
 	
+    addressSlave <= (others => '0');
+    write <= '0';
+    readSlave <= '0';
+    writedata <= x"00000000";
+    readdataSlave <= x"00000000";
+    memWritten <= '0';
+    waitrequest <= '0';
+    readdatavalid <= '0';
+    readdataMaster <= x"421ABD9F";
+
     async_reset;
 
     wait for 20 ns;
     avalonWrite(1, 16#00000B0A#);
-    avalonWrite(2, 16#00000003#);
-    avalonWrite(3, 16#00000EAC#);
-    avalonWrite(4, 16#00000BED#);
+    wait for 2*TIME_DELTA;
 
+    buflen9;
+
+    wait for 50*TIME_DELTA;
+
+    sim_finished <= true;
     wait;
 
 	end process simulation;
