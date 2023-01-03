@@ -98,10 +98,6 @@ architecture arch of memoryAcc_wrapper is
 begin
 
 	U0_master_wrapper : master_wrapper
-        generic map(
-            DefaultBurstLength  => x"4"
-        )
-
         port map(
             clk 	=> clk,
             nReset 	=> nReset,
