@@ -185,7 +185,7 @@ begin
 
                 write_green <= '0';        
                 -- Put data in RED_FIFO (5 bits only, need to truncate)
-                data_red <= CAM_data(4 downto 0); -- Data available on port
+                data_red <= CAM_data(5 downto 1); -- Data available on port
                 write_red <= '1'; -- Data sent to FIFO
                 state <= ST_SAMPLE_GREEN1;
             else null;
@@ -246,10 +246,7 @@ begin
             -- Convert R G1 G2 & B data into 16-bits value
             -- Get Green and Red values from FIFOs
             when ST_CONVERT =>
-
             
-
-
             state <= ST_SEND;
 --------------------------------------------------------------
             when ST_SEND =>
