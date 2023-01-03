@@ -269,7 +269,7 @@ begin
                     first_green2 <= '0';
 
                     -- Save data in buffer
-                    GREEN2 := to_integer(signed(CAM_data));
+                    GREEN2 := to_integer(unsigned(CAM_data));
                     state <= ST_SAMPLE_BLUE;
                 else null;
                 end if;
@@ -284,10 +284,10 @@ begin
             if PXL_CLK_old = '0' and pxl_clk = '1' then
                 -- Store BLUE pixel value in buffer for conversion
                 BLUE <= CAM_data(5 downto 1);
-                GREEN1  :=  to_integer(signed(output_green));
+                GREEN1  :=  to_integer(unsigned(output_green));
                 -- RED     <=  output_red;
                 GREEN1 := (GREEN1 + GREEN2) / 2;
-                GREEN <= std_logic_vector(to_signed(GREEN1, 6));
+                GREEN <= std_logic_vector(to_unsigned(GREEN1, 6));
                 state <= ST_SEND;
             else null;
             end if;
