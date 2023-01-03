@@ -32,9 +32,13 @@ begin
                 readdata_out_i(31 downto 16) <= readdata_in(15 downto 0);
                 readdatavalid_out_i <= readdatavalid_in;
     		end if;
-            readdata_out <= readdata_out_i;
-            readdatavalid_out <= readdatavalid_out_i;
 	end process;
+
+    process(clk, readdata_out_i, readdatavalid_out_i)
+    begin
+        readdata_out <= readdata_out_i;
+        readdatavalid_out <= readdatavalid_out_i;
+    end process;
 
 end RTL;
 
