@@ -39,7 +39,7 @@ USE ieee.std_logic_1164.all;
 LIBRARY altera_mf;
 USE altera_mf.all;
 
-ENTITY gFIFO2 IS
+ENTITY gFIFO IS
 	PORT
 	(
 		aclr		: IN STD_LOGIC ;
@@ -53,10 +53,10 @@ ENTITY gFIFO2 IS
 		full		: OUT STD_LOGIC ;
 		q		: OUT STD_LOGIC_VECTOR (15 DOWNTO 0)
 	);
-END gFIFO2;
+END gFIFO;
 
 
-ARCHITECTURE SYN OF gfifo2 IS
+ARCHITECTURE SYN OF gfifo IS
 
 	SIGNAL sub_wire0	: STD_LOGIC ;
 	SIGNAL sub_wire1	: STD_LOGIC ;
