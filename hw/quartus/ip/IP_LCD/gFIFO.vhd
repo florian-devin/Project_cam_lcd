@@ -106,9 +106,9 @@ BEGIN
 	GENERIC MAP (
 		add_ram_output_register => "OFF",
 		almost_empty_value => 5,
-		almost_full_value => 99999,
+		almost_full_value => 32750,
 		intended_device_family => "Cyclone V",
-		lpm_numwords => 131072,
+		lpm_numwords => 32768,
 		lpm_showahead => "OFF",
 		lpm_type => "scfifo",
 		lpm_width => 16,
