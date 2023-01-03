@@ -140,6 +140,7 @@ begin
         CAM_reset <= '0';
         new_frame <= '0';
         state <= ST_IDLE;
+        write_interface <= '0';
 
     elsif rising_edge(clk) then
         case state is
@@ -216,6 +217,7 @@ begin
             else null;
             end if;
             old_hsync <= Hsync;
+            PXL_CLK_old <= pxl_clk;
 --------------------------------------------------------------
             -- Data read is GREEN2 pixel
             when ST_SAMPLE_GREEN2 =>
@@ -232,7 +234,11 @@ begin
             if PXL_CLK_old = '0' and pxl_clk = '1' then
                 -- Store truncated data to 5 MSB and go to ST_CONVERT
                 BLUE <= CAM_data(5 downto 1);
-                state <= ST_CONVERT;
+                GREEN1  :=  to_integer(signed(output_green));
+                RED     <=  output_red;
+                GREEN1 := (GREEN1 + GREEN2) / 2;
+                GREEN <= std_logic_vector(to_signed(GREEN1, 6));
+                state <= ST_SEND;
             else null;
             end if;
             PXL_CLK_old <= pxl_clk;
@@ -240,17 +246,15 @@ begin
             -- Convert R G1 G2 & B data into 16-bits value
             -- Get Green and Red values from FIFOs
             when ST_CONVERT =>
-            read_green <= '1';
-            read_red <= '1';
+
             
-            GREEN1  :=  to_integer(signed(output_green));
-            RED     <=  output_red;
-            GREEN1 := (GREEN1 + GREEN2) / 2;
-            GREEN <= std_logic_vector(to_signed(GREEN1, 6));
+
 
             state <= ST_SEND;
 --------------------------------------------------------------
             when ST_SEND =>
+            read_green <= '1';
+            read_red <= '1';
             if pixel_count = 0 then
                 data_interface(4 downto 0) <= BLUE;
                 data_interface(10 downto 5) <= GREEN;
@@ -263,34 +267,37 @@ begin
                 pixel_count := 0;
                 write_interface <= '1';
             end if;
-            
-            read_green <= '0';
-            read_red <= '0';
 
             -- Tell master unit a data is available
             --if pixel_count = 0 then
                 --new_data <= '1';
             --else null;
             --end if;
-
+            PXL_CLK_old <= pxl_clk;
             state <= ST_DATA_CONTINUE;
 --------------------------------------------------------------
             when ST_DATA_CONTINUE =>
+            read_green <= '0';
+            read_red <= '0';
             --new_data <= '0';
             write_interface <= '0';
+            if PXL_CLK_old = '0' and pxl_clk = '1' then
 
-            -- Line finished
-            if Vsync = '1' and Hsync = '0' then
-                old_hsync <= Hsync;
-                state <= ST_WAIT_LINE_CHANGE_RG;
+                -- Line finished
+                if Vsync = '1' and Hsync = '0' then
+                    old_hsync <= Hsync;
+                    state <= ST_WAIT_LINE_CHANGE_RG;
 
-            -- Line still going
-            elsif Vsync = '1' and Hsync = '1' then
-                state <= ST_SAMPLE_GREEN2;
+                -- Line still going
+                elsif Vsync = '1' and Hsync = '1' then
+                    state <= ST_SAMPLE_GREEN2;
 
-            -- Frame finished
-            else state <= ST_END;
+                -- Frame finished
+                else state <= ST_END;
+                end if;
+            else null;
             end if;
+            PXL_CLK_old <= pxl_clk;
 --------------------------------------------------------------
             -- Wait for new line to start
             when ST_WAIT_LINE_CHANGE_RG =>
