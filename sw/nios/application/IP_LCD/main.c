@@ -42,6 +42,7 @@ enum address_mapping{
 
 int main()
 {
+	volatile uint16_t iwait = 0;
 	volatile uint32_t IO_regFIFOstatus	    = 0;	
 	volatile uint32_t IO_regStartAddress 	= 0;
 	volatile uint32_t IO_regBufferLength	= 0;
@@ -51,6 +52,9 @@ int main()
 	IO_regBufferLength	= IORD_32DIRECT(/*!MODULE!*/, regMemBufferLength);			/* Read regMemBufferLength */
 
     //reset timings at the beginning ? 
+	// just insert wait loop
+
+	for(i=0 ; i<5000 ; i++);	// hard wait, waiting on reset end for LCD and CAM
 
     IOWR_32DIRECT(/*!MODULE!*/, regCfgCmd, 0x0011); //Exit Sleep
 	IOWR_32DIRECT(/*!MODULE!*/, regCfgCmd, 0x00CF); // Power Control B
