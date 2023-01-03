@@ -28,21 +28,22 @@
  */
 enum address_mapping{
     regFIFOStatus           = 0x00,
-    regLCDControllerCtrl    = 0x04,
-    regMemStartAddress      = 0x08,
-    regMemBufferLength      = 0x0C,
-    regCfgCmd               = 0x10,
-    regCfgParam             = 0x14
+    regMemStartAddress      = 0x04,
+    regMemBufferLength      = 0x08,
+    regCfgCmd               = 0x0C,
+    regCfgParam             = 0x10
 
 }; /* address_mapping */
 
 
-
+#define START_ADDRESS (0x0000FFFF)		// Beginning of data address in memory
+#define BUFFER_LENGTH (0X00000030)		// Number of pixels in image set to 48
 
 
 int main()
 {
-	volatile uint16_t iwait = 0;
+	volatile uint16_t i = 0;
+	volatile uint16_t j = 0;
 	volatile uint32_t IO_regFIFOstatus	    = 0;	
 	volatile uint32_t IO_regStartAddress 	= 0;
 	volatile uint32_t IO_regBufferLength	= 0;
@@ -53,6 +54,9 @@ int main()
 
     //reset timings at the beginning ? 
 	// just insert wait loop
+
+	IOWR_32DIRECT(/*!MODULE!*/, regMemStartAddress, START_ADDRESS); //Exit Sleep
+	IOWR_32DIRECT(/*!MODULE!*/, regMemBufferLength, BUFFER_LENGTH); //Exit Sleep
 
 	for(i=0 ; i<5000 ; i++);	// hard wait, waiting on reset end for LCD and CAM
 
@@ -154,6 +158,31 @@ int main()
 	
     
     IOWR_32DIRECT(/*!MODULE!*/, regCfgCmd, 0x002c); // 0x2C Go to write memory 
+
+
+	for (j=0 ; j<30; j++) // for 30 lines
+	{ 
+		for(i=0 ; i<5000 ; i++);	// hard wait, waiting on sequencer to finish config
+
+
+		for(i=0 ; i<80 ; i++)
+		{
+			IOWR_32DIRECT(/*!MODULE!*/, regCfgParam, 0x00E0); // print dark green
+		}
+
+		for(i=0 ; i<80 ; i++)
+		{
+			IOWR_32DIRECT(/*!MODULE!*/, regCfgParam, 0x00EF); // print turquoise 
+		}
+
+
+		for(i=0 ; i<80 ; i++)
+		{
+			IOWR_32DIRECT(/*!MODULE!*/, regCfgParam, 0x000F); // print blue
+		}
+	}
+
+
 
 	while(1);
 	 
