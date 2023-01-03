@@ -75,6 +75,22 @@ architecture bench of ip_cam_tb is
    constant IP_CAM_STOP_REG      : std_logic_vector(2 downto 0)  := "100"; --WO
    constant IP_CAM_SNAPSHOT_REG  : std_logic_vector(2 downto 0)  := "101"; --WO
 
+   -- CHECK_DATA_OUT
+   signal addr_exp         : std_logic_vector(31 downto 0) := (others => '0');
+   signal data_exp         : std_logic_vector(31 downto 0) := (others => '0');
+
+   signal data1_exp        : std_logic_vector(15 downto 0) := (others => '0');
+   signal data_red1_exp    : std_logic_vector(4 downto 0)  := (others => '0');
+   signal data_green1a_exp : std_logic_vector(5 downto 0)  := (others => '0');
+   signal data_green1b_exp : std_logic_vector(5 downto 0)  := (others => '0');
+   signal data_blue1_exp   : std_logic_vector(4 downto 0)  := (others => '0');
+
+   signal data2_exp        : std_logic_vector(15 downto 0) := (others => '0');
+   signal data_red2_exp    : std_logic_vector(4 downto 0)  := (others => '0');
+   signal data_green2a_exp : std_logic_vector(5 downto 0)  := (others => '0');
+   signal data_green2b_exp : std_logic_vector(5 downto 0)  := (others => '0');
+   signal data_blue2_exp   : std_logic_vector(4 downto 0)  := (others => '0');
+
 begin
    CMOS : entity work.cmos_sensor_output_generator
    generic map(
@@ -136,6 +152,67 @@ begin
    -- clock generator
    clk <= not clk after CLK_PER/2 when not finished;
    Cam_Pixclk <= not Cam_Pixclk after CLK_PER*2 when not finished;
+
+
+   CHECK_DATA_OUT : process (AM_Write_n, clk, CamAddr_exp)
+   begin
+      if (falling_edge(AM_Write_n)) then
+         -- AM_Address check
+         assert(AM_Address = addr_exp)
+         report "IP_CAM_AM_Address : AM_Address error. Avalon bus value : " & 
+           integer'image(to_integer(unsigned(AM_Address))) & " expected value : " & 
+           integer'image(to_integer(unsigned(addr_exp))) severity error;
+
+         -- AM_Datawr check
+         assert(AM_Datawr = data_exp)
+         report "IP_CAM_AM_Datawr : AM_Datawr error. Avalon bus value : " & 
+           integer'image(to_integer(unsigned(AM_Datawr))) & " expected value : " & 
+           integer'image(to_integer(unsigned(data_exp))) severity error;
+
+      elsif (rising_edge(AM_Write_n)) then
+         addr_exp          <= std_logic_vector(unsigned(addr_exp) + 1);
+
+         data_red1_exp     <= std_logic_vector(unsigned(data_red1_exp)    + 4);
+         data_green1a_exp  <= std_logic_vector(unsigned(data_green1a_exp) + 4);
+         data_green1b_exp  <= std_logic_vector(unsigned(data_green1b_exp) + 4);
+         data_blue1_exp    <= std_logic_vector(unsigned(data_blue1_exp)   + 4);
+         --data1_exp         <= data_red1_exp & std_logic_vector((unsigned(data_green1a_exp) + unsigned(data_green1b_exp)) / 2) & data_blue1_exp;
+
+         data_red2_exp     <= std_logic_vector(unsigned(data_red2_exp)    + 4);
+         data_green2a_exp  <= std_logic_vector(unsigned(data_green2a_exp) + 4);
+         data_green2b_exp  <= std_logic_vector(unsigned(data_green2b_exp) + 4);
+         data_blue2_exp    <= std_logic_vector(unsigned(data_blue2_exp)   + 4);
+         --data2_exp         <= data_red2_exp & std_logic_vector((unsigned(data_green2a_exp) + unsigned(data_green2b_exp)) / 2)  & data_blue2_exp;
+
+         --data_exp <= data2_exp & data1_exp;
+
+
+      end if;
+
+      if (nReset = '0') then
+         addr_exp          <= x"0000000F";
+         data_red1_exp     <= "00000" ;
+         data_green1a_exp  <= "000001";
+         data_green1b_exp  <= "110000";
+         data_blue1_exp    <= "11000" ;
+         
+         data_red2_exp     <= "00001" ;
+         data_green2a_exp  <= "000011";
+         data_green2b_exp  <= "110010";
+         data_blue2_exp    <= "11001" ;
+
+         data_exp <= data2_exp & data1_exp;
+      elsif (rising_edge(clk)) then
+	      data1_exp         <= data_red1_exp & std_logic_vector((unsigned(data_green1a_exp) + unsigned(data_green1b_exp)) / 2) & data_blue1_exp;
+	      data2_exp         <= data_red2_exp & std_logic_vector((unsigned(data_green2a_exp) + unsigned(data_green2b_exp)) / 2) & data_blue2_exp;
+         data_exp          <= data2_exp & data1_exp;
+      end if;
+
+      --if (CamAddr_exp'event) then
+      --   addr_exp <=  CamAddr_exp;
+      --end if;
+
+   end process;
 
    -- stimulus generator
    process

@@ -83,28 +83,22 @@ add wave -noupdate /ip_cam_tb/CMOS/wrdata
 add wave -noupdate /ip_cam_tb/CMOS/frame_valid
 add wave -noupdate /ip_cam_tb/CMOS/line_valid
 add wave -noupdate -radix unsigned /ip_cam_tb/CMOS/data
-add wave -noupdate /ip_cam_tb/CMOS/reg_frame_width_config
-add wave -noupdate /ip_cam_tb/CMOS/reg_frame_height_config
-add wave -noupdate /ip_cam_tb/CMOS/reg_frame_frame_blank_config
-add wave -noupdate /ip_cam_tb/CMOS/reg_frame_line_blank_config
-add wave -noupdate /ip_cam_tb/CMOS/reg_line_line_blank_config
-add wave -noupdate /ip_cam_tb/CMOS/reg_line_frame_blank_config
+add wave -noupdate -radix hexadecimal /ip_cam_tb/CMOS/reg_frame_width_config
+add wave -noupdate -radix hexadecimal /ip_cam_tb/CMOS/reg_frame_height_config
+add wave -noupdate -radix hexadecimal /ip_cam_tb/CMOS/reg_frame_frame_blank_config
+add wave -noupdate -radix hexadecimal /ip_cam_tb/CMOS/reg_frame_line_blank_config
+add wave -noupdate -radix hexadecimal /ip_cam_tb/CMOS/reg_line_line_blank_config
+add wave -noupdate -radix hexadecimal /ip_cam_tb/CMOS/reg_line_frame_blank_config
 add wave -noupdate /ip_cam_tb/CMOS/reg_start
 add wave -noupdate /ip_cam_tb/CMOS/reg_stop
 add wave -noupdate /ip_cam_tb/CMOS/reg_state
 add wave -noupdate /ip_cam_tb/CMOS/next_reg_state
-add wave -noupdate /ip_cam_tb/CMOS/reg_frame_width_counter
-add wave -noupdate /ip_cam_tb/CMOS/next_reg_frame_width_counter
-add wave -noupdate /ip_cam_tb/CMOS/reg_frame_height_counter
-add wave -noupdate /ip_cam_tb/CMOS/next_reg_frame_height_counter
-add wave -noupdate /ip_cam_tb/CMOS/reg_frame_frame_blank_counter
-add wave -noupdate /ip_cam_tb/CMOS/next_reg_frame_frame_blank_counter
-add wave -noupdate /ip_cam_tb/CMOS/reg_frame_line_blank_counter
-add wave -noupdate /ip_cam_tb/CMOS/next_reg_frame_line_blank_counter
-add wave -noupdate /ip_cam_tb/CMOS/reg_line_line_blank_counter
-add wave -noupdate /ip_cam_tb/CMOS/next_reg_line_line_blank_counter
-add wave -noupdate /ip_cam_tb/CMOS/reg_line_frame_blank_counter
-add wave -noupdate /ip_cam_tb/CMOS/next_reg_line_frame_blank_counter
+add wave -noupdate -radix hexadecimal /ip_cam_tb/CMOS/reg_frame_width_counter
+add wave -noupdate -radix hexadecimal /ip_cam_tb/CMOS/reg_frame_height_counter
+add wave -noupdate -radix hexadecimal /ip_cam_tb/CMOS/reg_frame_frame_blank_counter
+add wave -noupdate -radix hexadecimal /ip_cam_tb/CMOS/reg_frame_line_blank_counter
+add wave -noupdate -radix hexadecimal /ip_cam_tb/CMOS/reg_line_line_blank_counter
+add wave -noupdate -radix hexadecimal /ip_cam_tb/CMOS/reg_line_frame_blank_counter
 add wave -noupdate /ip_cam_tb/DUT/Clk
 add wave -noupdate /ip_cam_tb/DUT/nReset
 add wave -noupdate -divider Cam
@@ -158,10 +152,23 @@ add wave -noupdate /ip_cam_tb/CMOS/wrdata
 add wave -noupdate /ip_cam_tb/CMOS/frame_valid
 add wave -noupdate /ip_cam_tb/CMOS/line_valid
 add wave -noupdate /ip_cam_tb/CMOS/data
+add wave -noupdate -divider tb_data_exp
+add wave -noupdate /ip_cam_tb/addr_exp
+add wave -noupdate /ip_cam_tb/data_exp
+add wave -noupdate /ip_cam_tb/data1_exp
+add wave -noupdate /ip_cam_tb/data_red1_exp
+add wave -noupdate /ip_cam_tb/data_green1a_exp
+add wave -noupdate /ip_cam_tb/data_green1b_exp
+add wave -noupdate /ip_cam_tb/data_blue1_exp
+add wave -noupdate /ip_cam_tb/data2_exp
+add wave -noupdate /ip_cam_tb/data_red2_exp
+add wave -noupdate /ip_cam_tb/data_green2a_exp
+add wave -noupdate /ip_cam_tb/data_green2b_exp
+add wave -noupdate /ip_cam_tb/data_blue2_exp
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {8638 ps} 0}
-quietly wave cursor active 1
-configure wave -namecolwidth 150
+WaveRestoreCursors {{Cursor 1} {3088019721 ps} 0} {{Cursor 2} {3095396359 ps} 0}
+quietly wave cursor active 2
+configure wave -namecolwidth 272
 configure wave -valuecolwidth 100
 configure wave -justifyvalue left
 configure wave -signalnamewidth 1
@@ -175,4 +182,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ms
 update
-WaveRestoreZoom {0 ps} {69106 ps}
+WaveRestoreZoom {0 ps} {557011 ps}
