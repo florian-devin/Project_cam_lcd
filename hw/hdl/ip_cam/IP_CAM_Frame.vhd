@@ -36,6 +36,9 @@ end IP_CAM_Frame;
 architecture  behav of IP_CAM_Frame is
 
     signal PXL_CLK_old: std_logic := '0';
+    signal first_red: std_logic := '0';
+    signal first_green2: std_logic := '0';
+
 
     signal old_vsync  : std_logic := '0';
     signal old_hsync  : std_logic := '0';
@@ -176,36 +179,38 @@ begin
             else null;
             end if;
             old_hsync <= Hsync;
+            first_red <= '1';
+
 
 --------------------------------------------------------------
             -- Data read is RED pixel
             when ST_SAMPLE_RED =>
-            -- Wait for PXL_CLK to be rising edge
-            if PXL_CLK_old = '0' and pxl_clk = '1' then
-
-                write_green <= '0';        
-                -- Put data in RED_FIFO (5 bits only, need to truncate)
-                data_red <= CAM_data(5 downto 1); -- Data available on port
-                write_red <= '1'; -- Data sent to FIFO
-                state <= ST_SAMPLE_GREEN1;
-            else null;
+            if Hsync = '0' then
+                old_hsync <= Hsync;
+                state <= ST_WAIT_LINE_CHANGE_GB;
+            else
+                if (PXL_CLK_old = '0' and pxl_clk = '1') or (first_red = '1') then
+                    first_red <= '0';
+                    write_green <= '0';        
+                    -- Put data in RED_FIFO (5 bits only, need to truncate)
+                    data_red <= CAM_data(5 downto 1); -- Data available on port
+                    write_red <= '1'; -- Data sent to FIFO
+                    state <= ST_SAMPLE_GREEN1;
+                else null;
+                end if;
             end if;
+            -- Wait for PXL_CLK to be rising edge
+
             PXL_CLK_old <= pxl_clk;
 --------------------------------------------------------------
             -- Data read is GREEN1 pixel
             when ST_SAMPLE_GREEN1 =>
             if PXL_CLK_old = '0' and pxl_clk = '1' then
                 write_red <= '0';
-                -- Checks if new line
-                if Hsync = '0' then
-                    old_hsync <= Hsync;
-                    state <= ST_WAIT_LINE_CHANGE_GB;
-                else            
-                    -- Put data in GREEN_FIFO (6 bits)
-                    data_green <= CAM_data;
-                    write_green <= '1';
-                    state <= ST_SAMPLE_RED;
-                end if;
+                data_green <= CAM_data;
+                write_green <= '1';
+                state <= ST_SAMPLE_RED;
+
             else null;
             end if;
             PXL_CLK_old <= pxl_clk;
@@ -214,6 +219,7 @@ begin
             when ST_WAIT_LINE_CHANGE_GB =>
             if Hsync = '1' and old_hsync ='0' then
                 state <= ST_SAMPLE_GREEN2;
+                first_green2 <= '1';
             else null;
             end if;
             old_hsync <= Hsync;
@@ -221,12 +227,28 @@ begin
 --------------------------------------------------------------
             -- Data read is GREEN2 pixel
             when ST_SAMPLE_GREEN2 =>
-            if PXL_CLK_old = '0' and pxl_clk = '1' then
-                -- Store data
-                GREEN2 := to_integer(signed(CAM_data));
-                state <= ST_SAMPLE_BLUE;
-            else null;
+            read_green <= '0';
+            read_red <= '0';
+            write_interface <= '0';
+
+            -- Check if still a valid data
+            if Hsync = '0' and Vsync = '1' then
+                old_hsync <= Hsync;
+                state <= ST_WAIT_LINE_CHANGE_RG;
+
+            elsif Vsync = '0' then
+                state <= ST_END;
+            else 
+                if (PXL_CLK_old = '0' and pxl_clk = '1') or first_green2 = '1' then
+                    first_green2 <= '0';
+                    -- Store data
+                    GREEN2 := to_integer(signed(CAM_data));
+                    state <= ST_SAMPLE_BLUE;
+                else null;
+                end if;
             end if;
+
+
             PXL_CLK_old <= pxl_clk;
 --------------------------------------------------------------
             -- Data is blue, need to convert the whole pixel into 16 bits
@@ -242,12 +264,6 @@ begin
             else null;
             end if;
             PXL_CLK_old <= pxl_clk;
---------------------------------------------------------------
-            -- Convert R G1 G2 & B data into 16-bits value
-            -- Get Green and Red values from FIFOs
-            when ST_CONVERT =>
-            
-            state <= ST_SEND;
 --------------------------------------------------------------
             when ST_SEND =>
             read_green <= '1';
@@ -265,41 +281,14 @@ begin
                 write_interface <= '1';
             end if;
 
-            -- Tell master unit a data is available
-            --if pixel_count = 0 then
-                --new_data <= '1';
-            --else null;
-            --end if;
             PXL_CLK_old <= pxl_clk;
-            state <= ST_DATA_CONTINUE;
---------------------------------------------------------------
-            when ST_DATA_CONTINUE =>
-            read_green <= '0';
-            read_red <= '0';
-            --new_data <= '0';
-            write_interface <= '0';
-            if PXL_CLK_old = '0' and pxl_clk = '1' then
-
-                -- Line finished
-                if Vsync = '1' and Hsync = '0' then
-                    old_hsync <= Hsync;
-                    state <= ST_WAIT_LINE_CHANGE_RG;
-
-                -- Line still going
-                elsif Vsync = '1' and Hsync = '1' then
-                    state <= ST_SAMPLE_GREEN2;
-
-                -- Frame finished
-                else state <= ST_END;
-                end if;
-            else null;
-            end if;
-            PXL_CLK_old <= pxl_clk;
+            state <= ST_SAMPLE_GREEN2;
 --------------------------------------------------------------
             -- Wait for new line to start
             when ST_WAIT_LINE_CHANGE_RG =>
             if Hsync = '1' and old_hsync ='0' then
                 state <= ST_SAMPLE_RED;
+                first_red <= '1';
             else null;
             end if;
             old_hsync <= Hsync;
