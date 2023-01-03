@@ -46,24 +46,29 @@ architecture comp of ip_cam_avmaster is
 begin
 
 
-    process(clk, nReset, new_frame, waitRequest, state_reg, fifo_empty)
+    STATE_LOGIC : process(clk, nReset)
     begin
         if nReset = '0' then
             state_reg       <= ST_IDLE;
             addr_reg        <= start_addr;
-            state_next      <= ST_IDLE;
-            addr_next       <= start_addr;
-            ack             <= '0';
+            --ack             <= '0';
 
-            address         <= (others => '0');
-            write_n         <= '1';
-            byteEnable_n    <= (others => '1');
-            burstCount      <= (others => '0');
-            datawr          <= (others => '0');
+            --address         <= (others => '0');
+            --write_n         <= '1';
+            --byteEnable_n    <= (others => '1');
+            --burstCount      <= (others => '0');
+            --datawr          <= (others => '0');
 
         elsif rising_edge(clk) then
             state_reg   <= state_next;
             addr_reg    <= addr_next;
+        end if;
+        end process;
+
+        NEXT_STATE : process(clk, nReset, new_frame, waitRequest, state_reg, fifo_empty)
+        begin
+            state_next  <= state_reg;
+            addr_next   <= addr_reg;
             case state_reg is 
                 when ST_IDLE =>
                     addr_next        <= start_addr;
@@ -117,8 +122,6 @@ begin
                         state_next  <= ST_IDLE;
                     end if;
             end case;
-
-        end if;
 
     end process;
 
