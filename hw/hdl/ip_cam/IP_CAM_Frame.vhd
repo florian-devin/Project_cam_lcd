@@ -1,7 +1,9 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-
+--------------------------------------------------------------
+-- ENTITY
+--------------------------------------------------------------
 entity IP_CAM_Frame is
     port(
         clk     :   in  std_logic;
@@ -32,21 +34,24 @@ entity IP_CAM_Frame is
     );
 end IP_CAM_Frame;
 
+--------------------------------------------------------------
+-- ARCHITECTURE
+--------------------------------------------------------------
 architecture  behav of IP_CAM_Frame is
     
-    -- Flags and buffers
+-- Flags and buffers
     signal PXL_CLK_old: std_logic := '0';
     signal old_vsync  : std_logic := '0';
     signal old_hsync  : std_logic := '0';
     signal first_red: std_logic := '0';
     signal first_green2: std_logic := '0';
 
-    -- Buffer for GREEN2 and BLUE
+-- Buffer for GREEN2 and BLUE
     signal GREEN       :   std_logic_vector(5 downto 0);
     signal BLUE     :   std_logic_vector(4 downto 0);
     signal RED      :   std_logic_vector(4 downto 0);
 
-    -- FIFO related internal signals
+-- FIFO related internal signals
     signal data_red    :  std_logic_vector (4 DOWNTO 0);
     signal data_green  :  std_logic_vector (5 DOWNTO 0);
     signal data_interface  :  std_logic_vector (31 DOWNTO 0) := std_logic_vector(to_signed(0, 32));
@@ -62,7 +67,7 @@ architecture  behav of IP_CAM_Frame is
     signal output_red  :   std_logic_vector (4 DOWNTO 0);
     signal output_green    :   std_logic_vector (5 DOWNTO 0);
 
-    -- Declare state names
+-- Declare state names
     type STATE_TYPE IS (ST_IDLE,
                         ST_WAIT_VSYNC,
                         ST_WAIT_HSYNC,
@@ -77,9 +82,8 @@ architecture  behav of IP_CAM_Frame is
                         ST_DATA_CONTINUE,
                         ST_END);
     signal state   : STATE_TYPE;
-begin
 
-    -- FIFO mapping
+begin
     FIFO_red : entity work.FIFO_red
     port map(
         clock => clk,
@@ -108,12 +112,18 @@ begin
         q => output_interface
     );
 
+--------------------------------------------------------------
+-- PXL_CLK
+--------------------------------------------------------------
 process(clk)
 begin
     -- Send clock to camera, will return pxl_clk which uses PLL on Mclk
     Mclk <= clk;
 end process;
 
+--------------------------------------------------------------
+-- STATE MACHINE
+--------------------------------------------------------------
 process(clk, nReset)
 variable GREEN2   :   integer := 0;
 variable GREEN1   :   integer := 0;
