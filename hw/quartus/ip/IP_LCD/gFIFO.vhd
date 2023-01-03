@@ -4,7 +4,7 @@
 -- MODULE: scfifo 
 
 -- ============================================================
--- File Name: gFIFO.vhd
+-- File Name: gFIFO2.vhd
 -- Megafunction Name(s):
 -- 			scfifo
 --
@@ -39,7 +39,7 @@ USE ieee.std_logic_1164.all;
 LIBRARY altera_mf;
 USE altera_mf.all;
 
-ENTITY gFIFO IS
+ENTITY gFIFO2 IS
 	PORT
 	(
 		aclr		: IN STD_LOGIC ;
@@ -53,10 +53,10 @@ ENTITY gFIFO IS
 		full		: OUT STD_LOGIC ;
 		q		: OUT STD_LOGIC_VECTOR (15 DOWNTO 0)
 	);
-END gFIFO;
+END gFIFO2;
 
 
-ARCHITECTURE SYN OF gfifo IS
+ARCHITECTURE SYN OF gfifo2 IS
 
 	SIGNAL sub_wire0	: STD_LOGIC ;
 	SIGNAL sub_wire1	: STD_LOGIC ;
@@ -112,7 +112,7 @@ BEGIN
 		lpm_showahead => "OFF",
 		lpm_type => "scfifo",
 		lpm_width => 16,
-		lpm_widthu => 17,
+		lpm_widthu => 15,
 		overflow_checking => "ON",
 		underflow_checking => "ON",
 		use_eab => "ON"
@@ -140,10 +140,10 @@ END SYN;
 -- Retrieval info: PRIVATE: AlmostEmpty NUMERIC "1"
 -- Retrieval info: PRIVATE: AlmostEmptyThr NUMERIC "5"
 -- Retrieval info: PRIVATE: AlmostFull NUMERIC "1"
--- Retrieval info: PRIVATE: AlmostFullThr NUMERIC "99999"
+-- Retrieval info: PRIVATE: AlmostFullThr NUMERIC "32750"
 -- Retrieval info: PRIVATE: CLOCKS_ARE_SYNCHRONIZED NUMERIC "0"
 -- Retrieval info: PRIVATE: Clock NUMERIC "0"
--- Retrieval info: PRIVATE: Depth NUMERIC "131072"
+-- Retrieval info: PRIVATE: Depth NUMERIC "32768"
 -- Retrieval info: PRIVATE: Empty NUMERIC "1"
 -- Retrieval info: PRIVATE: Full NUMERIC "1"
 -- Retrieval info: PRIVATE: INTENDED_DEVICE_FAMILY STRING "Cyclone V"
@@ -172,13 +172,13 @@ END SYN;
 -- Retrieval info: LIBRARY: altera_mf altera_mf.altera_mf_components.all
 -- Retrieval info: CONSTANT: ADD_RAM_OUTPUT_REGISTER STRING "OFF"
 -- Retrieval info: CONSTANT: ALMOST_EMPTY_VALUE NUMERIC "5"
--- Retrieval info: CONSTANT: ALMOST_FULL_VALUE NUMERIC "99999"
+-- Retrieval info: CONSTANT: ALMOST_FULL_VALUE NUMERIC "32750"
 -- Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "Cyclone V"
--- Retrieval info: CONSTANT: LPM_NUMWORDS NUMERIC "131072"
+-- Retrieval info: CONSTANT: LPM_NUMWORDS NUMERIC "32768"
 -- Retrieval info: CONSTANT: LPM_SHOWAHEAD STRING "OFF"
 -- Retrieval info: CONSTANT: LPM_TYPE STRING "scfifo"
 -- Retrieval info: CONSTANT: LPM_WIDTH NUMERIC "16"
--- Retrieval info: CONSTANT: LPM_WIDTHU NUMERIC "17"
+-- Retrieval info: CONSTANT: LPM_WIDTHU NUMERIC "15"
 -- Retrieval info: CONSTANT: OVERFLOW_CHECKING STRING "ON"
 -- Retrieval info: CONSTANT: UNDERFLOW_CHECKING STRING "ON"
 -- Retrieval info: CONSTANT: USE_EAB STRING "ON"
@@ -202,9 +202,9 @@ END SYN;
 -- Retrieval info: CONNECT: empty 0 0 0 0 @empty 0 0 0 0
 -- Retrieval info: CONNECT: full 0 0 0 0 @full 0 0 0 0
 -- Retrieval info: CONNECT: q 0 0 16 0 @q 0 0 16 0
--- Retrieval info: GEN_FILE: TYPE_NORMAL gFIFO.vhd TRUE
--- Retrieval info: GEN_FILE: TYPE_NORMAL gFIFO.inc TRUE
--- Retrieval info: GEN_FILE: TYPE_NORMAL gFIFO.cmp TRUE
--- Retrieval info: GEN_FILE: TYPE_NORMAL gFIFO.bsf TRUE
--- Retrieval info: GEN_FILE: TYPE_NORMAL gFIFO_inst.vhd TRUE
+-- Retrieval info: GEN_FILE: TYPE_NORMAL gFIFO2.vhd TRUE
+-- Retrieval info: GEN_FILE: TYPE_NORMAL gFIFO2.inc TRUE
+-- Retrieval info: GEN_FILE: TYPE_NORMAL gFIFO2.cmp TRUE
+-- Retrieval info: GEN_FILE: TYPE_NORMAL gFIFO2.bsf TRUE
+-- Retrieval info: GEN_FILE: TYPE_NORMAL gFIFO2_inst.vhd TRUE
 -- Retrieval info: LIB_FILE: altera_mf
