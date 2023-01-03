@@ -16,10 +16,15 @@ add wave -noupdate /ip_cam_tb/DUT/AS_Read_n
 add wave -noupdate -radix hexadecimal /ip_cam_tb/DUT/AS_Datard
 add wave -noupdate -divider Avalon_Master
 add wave -noupdate -radix hexadecimal /ip_cam_tb/DUT/AM_Address
+add wave -noupdate -radix hexadecimal /ip_cam_tb/DUT/IP_CAM_AVMaster/addr_reg
+add wave -noupdate -radix hexadecimal /ip_cam_tb/DUT/IP_CAM_AVMaster/addr_next
+add wave -noupdate -radix hexadecimal /ip_cam_tb/addr_exp
+add wave -noupdate /ip_cam_tb/DUT/IP_CAM_AVMaster/state_reg
 add wave -noupdate -radix hexadecimal /ip_cam_tb/DUT/AM_byteEnable_n
 add wave -noupdate /ip_cam_tb/DUT/AM_BurstCount
 add wave -noupdate /ip_cam_tb/DUT/AM_Write_n
 add wave -noupdate -radix hexadecimal /ip_cam_tb/DUT/AM_Datawr
+add wave -noupdate -radix hexadecimal /ip_cam_tb/data_exp
 add wave -noupdate /ip_cam_tb/DUT/AM_WaitRequest
 add wave -noupdate -divider Internal
 add wave -noupdate /ip_cam_tb/DUT/start_addr
@@ -27,7 +32,6 @@ add wave -noupdate /ip_cam_tb/DUT/length
 add wave -noupdate /ip_cam_tb/DUT/capture_done
 add wave -noupdate /ip_cam_tb/DUT/acquisition
 add wave -noupdate /ip_cam_tb/DUT/data
-add wave -noupdate /ip_cam_tb/DUT/IP_CAM_AVMaster/state_reg
 add wave -noupdate /ip_cam_tb/DUT/IP_CAM_AVMaster/state_next
 add wave -noupdate /ip_cam_tb/DUT/IP_CAM_AVMaster/new_frame
 add wave -noupdate /ip_cam_tb/DUT/new_frame
@@ -153,20 +157,18 @@ add wave -noupdate /ip_cam_tb/CMOS/frame_valid
 add wave -noupdate /ip_cam_tb/CMOS/line_valid
 add wave -noupdate /ip_cam_tb/CMOS/data
 add wave -noupdate -divider tb_data_exp
-add wave -noupdate /ip_cam_tb/addr_exp
-add wave -noupdate /ip_cam_tb/data_exp
-add wave -noupdate /ip_cam_tb/data1_exp
-add wave -noupdate /ip_cam_tb/data_red1_exp
-add wave -noupdate /ip_cam_tb/data_green1a_exp
-add wave -noupdate /ip_cam_tb/data_green1b_exp
-add wave -noupdate /ip_cam_tb/data_blue1_exp
-add wave -noupdate /ip_cam_tb/data2_exp
-add wave -noupdate /ip_cam_tb/data_red2_exp
-add wave -noupdate /ip_cam_tb/data_green2a_exp
-add wave -noupdate /ip_cam_tb/data_green2b_exp
-add wave -noupdate /ip_cam_tb/data_blue2_exp
+add wave -noupdate -radix hexadecimal /ip_cam_tb/data1_exp
+add wave -noupdate -radix hexadecimal /ip_cam_tb/data_red1_exp
+add wave -noupdate -radix hexadecimal /ip_cam_tb/data_green1a_exp
+add wave -noupdate -radix hexadecimal /ip_cam_tb/data_green1b_exp
+add wave -noupdate -radix hexadecimal /ip_cam_tb/data_blue1_exp
+add wave -noupdate -radix hexadecimal /ip_cam_tb/data2_exp
+add wave -noupdate -radix hexadecimal /ip_cam_tb/data_red2_exp
+add wave -noupdate -radix hexadecimal /ip_cam_tb/data_green2a_exp
+add wave -noupdate -radix hexadecimal /ip_cam_tb/data_green2b_exp
+add wave -noupdate -radix hexadecimal /ip_cam_tb/data_blue2_exp
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {3088019721 ps} 0} {{Cursor 2} {3095396359 ps} 0}
+WaveRestoreCursors {{Cursor 1} {3095395000 ps} 0} {{Cursor 2} {3095349014 ps} 0}
 quietly wave cursor active 2
 configure wave -namecolwidth 272
 configure wave -valuecolwidth 100
@@ -182,4 +184,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ms
 update
-WaveRestoreZoom {0 ps} {557011 ps}
+WaveRestoreZoom {3095347265 ps} {3095429924 ps}
