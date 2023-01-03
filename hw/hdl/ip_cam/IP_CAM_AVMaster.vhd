@@ -81,6 +81,7 @@ begin
                     end if;
 
                 when ST_WAIT_DATA => 
+                    ack <= '0';
                     if fifo_empty = '0' then
                         state_next      <= ST_WRITE;
                         address         <= addr_reg;
