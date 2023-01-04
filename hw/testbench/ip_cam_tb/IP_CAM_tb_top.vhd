@@ -60,6 +60,9 @@ architecture bench of ip_cam_tb is
    signal CamStart_exp     : std_logic := '0';
    signal CamStop_exp      : std_logic := '0';
    signal CamSnapshot_exp  : std_logic := '0';
+   
+   signal CamSnapshot_exp_next : std_logic := '0';
+   signal CamSnapshot_exp_next_old : std_logic := '0';
 
    --CMOS reg value
    constant FRAME_WIDTH       : positive := 5;
@@ -76,9 +79,11 @@ architecture bench of ip_cam_tb is
    constant IP_CAM_START_REG     : std_logic_vector(2 downto 0)  := "011"; --WO
    constant IP_CAM_STOP_REG      : std_logic_vector(2 downto 0)  := "100"; --WO
    constant IP_CAM_SNAPSHOT_REG  : std_logic_vector(2 downto 0)  := "101"; --WO
+   constant IP_CAM_LCD_ADDR_REG  : std_logic_vector(2 downto 0)  := "110"; --RW
 
    constant START_ADDR_REG_VAL   : std_logic_vector(31 downto 0) := x"0000000F";
    constant LENGTH_REG_VAL       : std_logic_vector(31 downto 0) := x"00000FFF";
+   constant LCD_ADDR             : std_logic_vector(31 downto 0) := x"0F000000";
 
    -- CHECK_DATA_OUT
    signal addr_exp         : std_logic_vector(31 downto 0) := (others => '0');
@@ -99,6 +104,12 @@ architecture bench of ip_cam_tb is
    signal ligne_cnt        : unsigned(9 downto 0) := "0000000001";
    signal old_hsync        : std_logic := '0';
    signal old_vsync        : std_logic := '0';
+
+   signal capture_stat     : std_logic := '0';
+   signal Cam_Vsync_cnt    : std_logic_vector(1 downto 0) := "00";
+   signal Cam_Vsync_old    : std_logic := '0';
+
+
 
 
 begin
@@ -163,26 +174,62 @@ begin
    clk <= not clk after CLK_PER/2 when not finished;
    Cam_Pixclk <= not Cam_Pixclk after CLK_PER*2 when not finished;
 
+   CAPTURE_STAT_PRO : process (clk, CamStart_exp, CamSnapshot_exp, Cam_Vsync, CamSnapshot_exp_next_old)
+   begin
+      if (rising_edge(clk)) then 
+         if (CamSnapshot_exp_next = '1' and CamSnapshot_exp_next_old = '0') then
+            -- if reg is writed last clk cycle
+            CamSnapshot_exp <= '1';
+         elsif (CamStart_exp = '1' and CamSnapshot_exp = '1') then
+            capture_stat <= '1';
+            if (Cam_Vsync = '0' and Cam_Vsync_old = '1') then
+               if (Cam_Vsync_cnt = "01") then
+                  CamSnapshot_exp         <= '0';
+                  Cam_Vsync_cnt           <= "00";
+               else
+                  Cam_Vsync_cnt           <= std_logic_vector(unsigned(Cam_Vsync_cnt) + 1);
+               end if;
+            end if;  
+         else 
+            capture_stat <= '0'; 
+         end if;
+         CamSnapshot_exp_next_old <= CamSnapshot_exp_next;
+         Cam_Vsync_old <= Cam_Vsync;
+         CamStatus_exp <= capture_stat;
+      end if;
+   end process;
 
-   CHECK_DATA_OUT : process (AM_Write_n, clk, CamAddr_exp)
+   CHECK_DATA_OUT : process (AM_Write_n, clk, CamAddr_exp, capture_stat)
       variable data_green1_exp : std_logic_vector(6 downto 0)  := (others => '0');
       variable data_green2_exp : std_logic_vector(6 downto 0)  := (others => '0');
    begin
       if (falling_edge(AM_Write_n)) then
          -- AM_Address check
-         assert(AM_Address = addr_exp)
-         report "IP_CAM_AM_Address : AM_Address error. Avalon bus value : " & 
-           integer'image(to_integer(unsigned(AM_Address))) & " expected value : " & 
-           integer'image(to_integer(unsigned(addr_exp))) severity error;
+         if (capture_stat = '1') then
+            assert(AM_Address = addr_exp)
+            report "IP_CAM_AM_Address_mem : AM_Address error. Avalon bus value : " & 
+              integer'image(to_integer(unsigned(AM_Address))) & " expected value : " & 
+              integer'image(to_integer(unsigned(addr_exp))) severity error;
 
-         -- AM_Datawr check
-         assert(AM_Datawr = data_exp)
-         report "IP_CAM_AM_Datawr : AM_Datawr error. Avalon bus value : " & 
-           integer'image(to_integer(unsigned(AM_Datawr))) & " expected value : " & 
-           integer'image(to_integer(unsigned(data_exp))) severity error;
+            -- AM_Datawr check
+            assert(AM_Datawr = data_exp)
+            report "IP_CAM_AM_Datawr_mem : AM_Datawr error. Avalon bus value : " & 
+              integer'image(to_integer(unsigned(AM_Datawr))) & " expected value : " & 
+              integer'image(to_integer(unsigned(data_exp))) severity error;
+            else
+               assert(AM_Address = LCD_ADDR)
+               report "IP_CAM_AM_Address_LCD : AM_Address error. Avalon bus value : " & 
+                 integer'image(to_integer(unsigned(AM_Address))) & " expected value : " & 
+                 integer'image(to_integer(unsigned(LCD_ADDR))) severity error;
+
+               -- AM_Datawr check
+               assert(AM_Datawr(0) = '1')
+               report "IP_CAM_AM_Datawr_LCD : AM_Datawr error." severity error;
+            end if;
+
 
       elsif (rising_edge(AM_Write_n)) then
-         if (addr_exp = std_logic_vector(unsigned(START_ADDR_REG_VAL) + unsigned(LENGTH_REG_VAL))) then
+         if (addr_exp = std_logic_vector(unsigned(START_ADDR_REG_VAL) + unsigned(LENGTH_REG_VAL)) or capture_stat = '0') then
             addr_exp       <= START_ADDR_REG_VAL;
          else
             addr_exp       <= std_logic_vector(unsigned(addr_exp) + 1);
@@ -202,15 +249,15 @@ begin
 
       if (nReset = '0') then
          addr_exp          <= START_ADDR_REG_VAL;
-         data_red1_exp     <= "000000" ; -- 0
-         data_green1a_exp  <= "0000001"; -- 1
-         data_green1b_exp  <= "0110000"; -- 
-         data_blue1_exp    <= "110000" ; -- 
+         data_red1_exp     <= "000000" ;
+         data_green1a_exp  <= "0000001";
+         data_green1b_exp  <= "0110000";
+         data_blue1_exp    <= "110000" ;
          
-         data_red2_exp     <= "000010" ; -- 
-         data_green2a_exp  <= "0000011"; -- 
-         data_green2b_exp  <= "0110010"; -- 
-         data_blue2_exp    <= "110010" ; -- 
+         data_red2_exp     <= "000010" ;
+         data_green2a_exp  <= "0000011";
+         data_green2b_exp  <= "0110010";
+         data_blue2_exp    <= "110010" ;
 
          data_exp <= data2_exp & data1_exp;
 
@@ -285,12 +332,15 @@ begin
         AS_Cs_n              <= '0';
         wait until        rising_edge(clk);
         case addr is
-            when "000" => CamAddr_exp       <= data;
-            when "001" => CamLength_exp     <= data;
-            when "011" => CamStart_exp      <= '1';
-            when "100" => CamStart_exp      <= '0'; 
-                          CamSnapshot_exp   <= '0';     --CamStop
-            when "101" => CamSnapshot_exp   <= '1';
+            when "000" => CamAddr_exp           <= data;
+            when "001" => CamLength_exp         <= data;
+            when "011" => CamStart_exp          <= '1';
+            when "100" => CamStart_exp          <= '0'; 
+                          CamSnapshot_exp_next  <= '0';     --CamStop
+            when "101" => 
+               CamSnapshot_exp_next  <= '1';
+               wait until rising_edge(clk);
+               CamSnapshot_exp_next  <= '0';
             when others => null;
         end case;
         AS_Write_n           <= '1';
@@ -365,11 +415,15 @@ begin
       AS_ReadReg (IP_CAM_STATUS_REG);
 
       --start aquisition
+      AS_WriteReg(IP_CAM_LCD_ADDR_REG, LCD_ADDR);
       AS_WriteReg(IP_CAM_ADDR_REG, START_ADDR_REG_VAL);
       AS_ReadReg (IP_CAM_ADDR_REG);
       AS_WriteReg(IP_CAM_LENGTH_REG, LENGTH_REG_VAL);
       AS_ReadReg (IP_CAM_LENGTH_REG);
       AS_WriteReg(IP_CAM_START_REG, x"00000001");
+      AS_WriteReg(IP_CAM_SNAPSHOT_REG, x"00000001");
+
+      wait for 9 ms;
       AS_WriteReg(IP_CAM_SNAPSHOT_REG, x"00000001");
 
       -- start aquisition

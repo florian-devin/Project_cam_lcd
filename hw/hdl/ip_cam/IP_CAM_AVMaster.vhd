@@ -47,6 +47,7 @@ architecture comp of ip_cam_avmaster is
     signal write_data               : std_logic_vector(31 downto 0);
 
     signal capture_done_req         : std_logic;
+    signal capture_done_rst         : std_logic;
 
 begin
 
@@ -63,6 +64,8 @@ begin
             addr_reg    <= addr_next;
             if (capture_done = '1') then
                 capture_done_req <= '1';
+            elsif (capture_done_rst = '1') then
+                capture_done_req <= '0';
             end if;
         end if;
         end process;
@@ -80,6 +83,7 @@ begin
                     byteEnable_n    <= (others => '1');
                     burstCount      <= (others => '0');
                     datawr          <= (others => '0');
+                    capture_done_rst<= '0';
 
                     if new_frame = '1' then
                         state_next <= ST_WAIT_DATA;
@@ -96,6 +100,7 @@ begin
                     elsif capture_done_req = '1' then
                         state_next      <= ST_WRITE_LCD;
                         addr_next       <= start_addr;
+                        capture_done_rst <= '1';
                     end if;
                     
                 when ST_WRITE =>
@@ -124,7 +129,7 @@ begin
                 when ST_WRITE_LCD => 
                     if waitRequest = '0' then
                         address         <= LCD_addr;
-                        datawr(1)       <= '1';
+                        datawr(0)       <= '1';
                         write_n         <= '0';
                         byteEnable_n    <= "0000";
                         state_next      <= ST_IDLE;
