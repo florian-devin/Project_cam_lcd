@@ -18,19 +18,19 @@ architecture test of IP_LCD_wrapper_tb is
     signal sim_finished : boolean := false;
 
     signal addressSlave 	: std_logic_vector(2 downto 0);
-    signal write 		: std_logic;
+    signal writeSlave 		: std_logic;
     signal readSlave 		: std_logic;
-    signal writedata	: std_logic_vector(31 downto 0);
+    signal writedataSlave	: std_logic_vector(31 downto 0);
     signal readdataSlave 	: std_logic_vector(31 downto 0);
 
-    signal memWritten : std_logic;
-    signal memRed : std_logic;
     signal addressMaster : std_logic_vector(31 downto 0);
     signal burstcount : std_logic_vector(3 downto 0);
     signal readMaster : std_logic;
-    signal waitrequest : std_logic;
-    signal readdatavalid : std_logic;
+    signal waitrequestMaster : std_logic;
+    signal readdatavalidMaster : std_logic;
     signal readdataMaster : std_logic_vector(31 downto 0);
+    signal writedataMaster : std_logic_vector(31 downto 0);
+    signal writeMaster : std_logic;
 
     signal CSX : std_logic;
     signal D_CX : std_logic;
@@ -49,18 +49,18 @@ begin
 		clk     => clk,
 		nReset  => nReset,
         addressSlave => addressSlave,
-        write => write,
+        writeSlave => writeSlave,
         readSlave => readSlave,
-        writedata => writedata,
+        writedataSlave => writedataSlave,
         readdataSlave => readdataSlave,
-        memWritten => memWritten,
-        memRed => memRed,
         addressMaster => addressMaster,
         burstcount => burstcount,
         readMaster => readMaster,
-        waitrequest => waitrequest,
-        readdatavalid => readdatavalid,
+        writeMaster => writeMaster,
+        waitrequestMaster => waitrequestMaster,
+        readdatavalidMaster => readdatavalidMaster,
         readdataMaster => readdataMaster,
+        writedataMaster => writedataMaster,
         CSX => CSX,
         D_CX => D_CX,
         RDX => RDX,
@@ -103,10 +103,10 @@ begin
     begin
 
         addressSlave <= std_logic_vector(to_unsigned(addr, 3));
-        writedata <= std_logic_vector(to_unsigned(data, 32));
-        write <= '1';
+        writedataSlave <= std_logic_vector(to_unsigned(data, 32));
+        writeSlave <= '1';
         wait for 20 ns;
-        write <= '0';
+        writeSlave <= '0';
         wait for 20 ns;
 
     end procedure avalonWrite;
@@ -127,23 +127,20 @@ begin
         avalonWrite(2, 16#00000003#);
         wait for 40 ns;
 
-        memWritten<= '1';
-        wait for CLK_PERIOD;
-		memWritten <= '0';
         wait until rising_edge(clk);
 		
         wait for 2*TIME_DELTA;
         -- simulate read data valid fom Avalon Bus
-        readdatavalid<= '1';
+        readdatavalidMaster<= '1';
         wait for CLK_PERIOD;
-		readdatavalid <= '0';
+		readdatavalidMaster <= '0';
         wait until rising_edge(clk);
 
         wait for 500 ns;
         -- simulate read data valid fom Avalon Bus
-        readdatavalid<= '1';
+        readdatavalidMaster<= '1';
         wait for CLK_PERIOD;
-		readdatavalid <= '0';
+		readdatavalidMaster <= '0';
         wait until rising_edge(clk);
 
 
@@ -154,49 +151,48 @@ begin
         avalonWrite(2, 16#00000009#);
         wait for 40 ns;
 
-        memWritten<= '1';
-        wait for CLK_PERIOD;
-		memWritten <= '0';
+        avalonWrite(5, 16#00000000#);
         wait until rising_edge(clk);
 		
         wait for 2*TIME_DELTA;
         
         -- simulate read data valid fom Avalon Bus
-        readdatavalid<= '1';
+        readdataMaster <= X"00DBC53A";
+        readdatavalidMaster<= '1';
         wait for CLK_PERIOD;
-		readdatavalid <= '0';
+		readdatavalidMaster <= '0';
         wait until rising_edge(clk);
 
         wait for TIME_DELTA;
         -- simulate read data valid fom Avalon Bus
-        readdatavalid<= '1';
+        readdatavalidMaster<= '1';
         wait for CLK_PERIOD;
-		readdatavalid <= '0';
+		readdatavalidMaster <= '0';
         wait until rising_edge(clk);
 
         wait for TIME_DELTA;
         -- simulate read data valid fom Avalon Bus
         readdataMaster <= X"00060A0E";
-        readdatavalid<= '1';
+        readdatavalidMaster<= '1';
         wait for CLK_PERIOD;
-		readdatavalid <= '0';
+		readdatavalidMaster <= '0';
         wait until rising_edge(clk);
 
         wait for TIME_DELTA;
         -- simulate read data valid fom Avalon Bus
-        readdatavalid<= '1';
+        readdatavalidMaster<= '1';
         wait for CLK_PERIOD;
-		readdatavalid <= '0';
-        waitrequest <= '1';
+		readdatavalidMaster <= '0';
+        waitrequestMaster <= '1';
         wait until rising_edge(clk);
 
         wait for 10*TIME_DELTA;
-        waitrequest <= '0';
-        wait until rising_edge (clk);
-        -- simulate read data valid fom Avalon Bus
-        readdatavalid<= '1';
+        waitrequestMaster <= '0';
         wait for CLK_PERIOD;
-		readdatavalid <= '0';
+        -- simulate read data valid fom Avalon Bus
+        readdatavalidMaster<= '1';
+        wait for CLK_PERIOD;
+		readdatavalidMaster <= '0';
         wait until rising_edge(clk);
 
 
@@ -205,16 +201,16 @@ begin
 	begin
 	
     addressSlave <= (others => '0');
-    write <= '0';
+    writeSlave <= '0';
     readSlave <= '0';
-    writedata <= x"00000000";
     readdataSlave <= x"00000000";
-    memWritten <= '0';
-    waitrequest <= '0';
-    readdatavalid <= '0';
+    waitrequestMaster <= '0';
+    readdatavalidMaster <= '0';
     readdataMaster <= x"421ABD9F";
 
     async_reset;
+    wait for 20 ns;
+    avalonWrite(6, 16#000EAEEAA#);
 
     wait for 20 ns;
     avalonWrite(1, 16#00000B0A#);
@@ -222,7 +218,9 @@ begin
 
     buflen9;
 
-    wait for 50*TIME_DELTA;
+    wait for 20*TIME_DELTA;
+    buflen9;
+    wait for 30*TIME_DELTA;
 
     sim_finished <= true;
     wait;
