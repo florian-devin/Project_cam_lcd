@@ -130,12 +130,12 @@ begin
                 when ST_IDLE =>
                     addr_next               <= start_addr;
                     ack_next                <= '0';
-                    address_next            <= (others => '0');
+                    --address_next            <= (others => '0');
                     write_n_next            <= '1';
                     byteEnable_n_next       <= (others => '1');
                     burstCount_next         <= (others => '0');
                     datawr_next             <= (others => '0');
-                    capture_done_rst_reg    <= '0';
+                    capture_done_rst_next   <= '0';
 
                     if new_frame = '1' then
                         state_next      <= ST_WAIT_DATA;
