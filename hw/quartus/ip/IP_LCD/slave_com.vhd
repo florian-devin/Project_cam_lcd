@@ -154,6 +154,7 @@ begin
                     when "010" => readdata <= iregMemBufferLength;
                     when "011" => readdata <= iregCfgCmd;
                     when "100" => readdata <= iregCfgParam;
+                    when "110" => readdata <= iregCamAddress;
 					when others => null;
 				end case;
 			end if;
