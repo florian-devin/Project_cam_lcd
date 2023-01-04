@@ -23,7 +23,8 @@ architecture test of ReadMemCtrl_tb is
     signal waitrequest              : std_logic;                                 -- Avalon Bus waitrequest
     signal MasterFIFO_empty         : std_logic;                                 -- master FIFO fill info   
     signal globalFIFO_AlmostFull    : std_logic;                                 -- global FIFO fill info
-    signal startAddress             : std_logic_vector(31 downto 0);             -- First address of the frame in memory
+    signal CAMaddress               : std_logic_vector(31 downto 0);             -- Address of the IP_CAM slave register containing the address of meomry read status
+	signal startAddress             : std_logic_vector(31 downto 0);             -- First address of the frame in memory
     signal bufferLength             : std_logic_vector(31 downto 0);             -- Number of pixels to read in memory
     signal memWritten               : std_logic;                                 -- Sync signal from IP_CAM
     signal pixCounter               : std_logic_vector(31 downto 0);              -- Nb of pixel read since last start of frame
@@ -31,6 +32,7 @@ architecture test of ReadMemCtrl_tb is
 
 	-- Outputs
     signal read            : std_logic;                                        -- Avalon Bus read 
+	signal write 		   : std_logic;
 	signal isig_read            : std_logic;                                        -- Avalon Bus read 
     signal burstcount      : std_logic_vector(3 downto 0);                     -- Avalon Bus burst count (nb of consecutive reads)
     signal isig_burstcount : std_logic_vector(3 downto 0);                     -- Avalon Bus burst count (nb of consecutive reads)
@@ -59,13 +61,15 @@ begin
         waitrequest           => waitrequest,          
         MasterFIFO_empty      => MasterFIFO_empty,     
         globalFIFO_AlmostFull => globalFIFO_AlmostFull,
-        startAddress          => startAddress,         
+        CAMaddress			  => CAMaddress,
+		startAddress          => startAddress,         
         bufferLength          => bufferLength,         
         memWritten            => memWritten,           
         pixCounter            => pixCounter,
 		BurstCounter		  => BurstCounter,              
         read                  => read,                 
-        im_read				  => isig_read, 
+        write 				  => write,
+		im_read				  => isig_read, 
 		burstcount            => burstcount,
 		im_burstcount         => isig_burstcount,            
         address               => address,              
@@ -136,7 +140,8 @@ begin
         waitrequest             <= '0';
         MasterFIFO_empty        <= '0';
         globalFIFO_AlmostFull   <= '0';
-        startAddress            <= (others => '0');
+        CAMaddress              <= x"0000FABC";
+		startAddress            <= x"FEFECDCD";
         bufferLength            <= x"00000003";
         memWritten              <= '0';
         pixCounter              <= x"00000000";
@@ -157,6 +162,9 @@ begin
 
 		rdloop;
 		rdloop;
+		waitrequest <= '1';
+		wait for 2*TIME_DELTA;
+		waitrequest <= '0';
 
 		wait for 2*TIME_DELTA;
 

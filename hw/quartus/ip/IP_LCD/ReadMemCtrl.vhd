@@ -15,6 +15,7 @@ entity ReadMemCtrl is
         waitrequest             : in std_logic;                                 -- Avalon Bus waitrequest
         masterFIFO_empty        : in std_logic;                                 -- master FIFO fill info   
         globalFIFO_AlmostFull   : in std_logic;                                 -- global FIFO fill info
+        CAMaddress              : in std_logic_vector(31 downto 0);             -- Address of the IP_CAM slave register containing the address of meomry read status
         startAddress            : in std_logic_vector(31 downto 0);             -- First address of the frame in memory
         bufferLength            : in std_logic_vector(31 downto 0);             -- Number of pixels to read in memory
         memWritten              : in std_logic;                                 -- Sync signal from IP_CAM
@@ -23,6 +24,7 @@ entity ReadMemCtrl is
 
         --Outputs
         read            : out std_logic;                                        -- Avalon Bus read 
+        write           : out std_logic;                                        -- Avalon Bus write
         im_read         : out std_logic;                                          -- Avalon Bus read for master internal signal
         burstcount      : out std_logic_vector(3 downto 0);                     -- Avalon Bus burst count (nb of consecutive reads)
         im_burstcount   : out std_logic_vector(3 downto 0);                                        
@@ -38,8 +40,8 @@ architecture RTL of ReadMemCtrl is
 
 	type states is (Idle, GetStartAddress, CheckEOL, SyncGlobalFIFO, GetPointer, 
                     SetRdSignals, WaitWaitRequest, RealeaseRdSignals,
-                    SyncMasterFIFO1, SyncMasterFIFO2, ResetPointer, 
-                    UpdateAddress, ClrMemRed);
+                    SyncMasterFIFO1, UpdateAddress, SyncMasterFIFO2, 
+                    wrCAM_init, wrCAM_rise, wrCAM_fall);
 
 	signal current_state: states;
 	attribute enum_encoding: string;
@@ -47,6 +49,7 @@ architecture RTL of ReadMemCtrl is
 
     --internal signals
     signal i_read               : std_logic                     := '0';
+    signal i_write              : std_logic                     := '0';
     signal i_burstcount         : std_logic_vector(3 downto 0)  := (others => '0');
     signal i_address            : std_logic_vector(31 downto 0) := (others => '0');
     signal i_memRed             : std_logic                     := '0';
@@ -63,6 +66,7 @@ begin
     		if nReset = '0' then
                 --reset values
                 i_read              <= '0';
+                i_write             <= '0';
                 i_burstcount        <= (others => '0');
                 i_address           <= (others => '0');
                 i_memRed            <= '0';
@@ -90,7 +94,7 @@ begin
 
                     when CheckEOL =>
                         if pixCounter >= BufferLength  then
-                            current_state <= ResetPointer;                      -- Total nb of pixel read, reset pointer
+                            current_state <= wrCAM_init;                      -- Total nb of pixel read, reset pointer
                         else
                             current_state <= SyncGlobalFIFO;                    -- Total nb of pixels not reached, continue
                         end if;
@@ -153,15 +157,23 @@ begin
                             current_state <= SyncMasterFIFO2;                   -- Master FIFO operation not finished 
                         end if;
                     
-                    when ResetPointer =>
+                    when wrCAM_init =>
                         i_clrPixCounter <= '1';                                 -- Clear pixel counter for new frame
-                        i_memRed <= '1';                                        -- Synchronize with IP_CAM                
-                        current_state <= ClrMemRed;
-                    
-                    when ClrMemRed =>
+                        i_address <= CAMaddress;                                                  
+                        current_state <= wrCAM_rise;
+
+                    when wrCAM_rise =>
                         i_clrPixCounter <= '0';                                 -- realase clear of pixel counter
-                        i_memRed <= '0';                                        -- release sync with IP_CAM signal
-                        current_state <= Idle;   
+                        if waitRequest = '0' then
+                            i_write <= '1';
+                            current_state <= wrCAM_fall;
+                        else 
+                            current_state <= wrCAM_rise;
+                        end if;
+
+                    when wrCAM_fall =>
+                        i_write <= '0';
+                        current_state <= Idle;
 
                     when others =>
                         current_state <= Idle;
@@ -173,7 +185,8 @@ begin
     
     -- Apply internal to external
     read            <= i_read;
-    im_read         <= i_read;       
+    im_read         <= i_read;
+    write            <= i_write;       
     burstcount      <= i_burstcount;
     im_burstcount   <= i_burstcount;
     address         <= i_address;
