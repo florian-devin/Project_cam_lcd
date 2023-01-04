@@ -23,7 +23,8 @@ entity slave_com is
 		dataFifo : out std_logic_vector(8 downto 0);
         wrreq : out std_logic;
         bufferLength : out std_logic_vector(31 downto 0);
-        startAddress : out std_logic_vector(31 downto 0)
+        startAddress : out std_logic_vector(31 downto 0);
+        memWritten : out std_logic
 	);
 end slave_com;
 
@@ -40,23 +41,28 @@ architecture RTL of slave_com is
     signal iWrreq : std_logic := '0';
     signal iBufferLength : std_logic_vector(31 downto 0) := (others => '0');
     signal iStartAddress : std_logic_vector(31 downto 0) := (others => '0');
+    signal iMemWritten : std_logic := '0';
 
     signal iNewCmd : std_logic := '0';
     signal iNewParam : std_logic := '0';
+    signal iCamFinished : std_logic := '0';
 begin
 
     process(clk, nReset, iregCfgCmd, iregCfgParam, iregMemStartAddress, iregMemBufferLength)
+        variable prevCamFinished : std_logic := '0';
     begin
         if nReset = '0' then
             iBufferLength <= (others => '0');
             iStartAddress <= (others => '0');
             iDataFifo <= (others => '0');
             iWrreq <= '0';
+            iMemWritten <= '0';
+            prevCamFinished := '0';
 
         elsif rising_edge(clk) then
             iBufferLength <= iregMemBufferLength(31 downto 0);
             iStartAddress <= iregMemStartAddress(31 downto 0);
-
+            iMemWritten <= '0';
             iDataFifo <= (others => '0');
             iWrreq <= '0';
 
@@ -68,6 +74,15 @@ begin
                 iDataFifo <= iregCfgParam(8 downto 0);
                 iDataFifo(8) <= '1';
                 iWrreq <= '1';
+            elsif iCamFinished = '1' then
+                if prevCamFinished = '0' then
+                    iMemWritten <= '1';
+                    prevCamFinished := '1';
+                else
+                    prevCamFinished := '1';
+                end if;
+            else
+                prevCamFinished := '0'; -- iCamFinished = '0'
             end if;
 
         end if;
@@ -87,6 +102,7 @@ begin
         elsif rising_edge(clk) then
             iNewParam <= '0';
             iNewCmd <= '0';
+            iCamFinished <= '0';
             if write = '1' then
                 case address is
                     -- when "000" => DO NOTHING, FIFO status can only be read
@@ -98,6 +114,7 @@ begin
                     when "100" => 
                         iregCfgParam <= writedata;
                         iNewParam <= '1';
+                    when "101" => iCamFinished <= '1';
                     when others => null;
                 end case;
             end if;
@@ -140,5 +157,6 @@ begin
     wrreq <= iWrreq;
     bufferLength <= iBufferLength;
     startAddress <= iStartAddress;
+    memWritten <= iMemWritten;
 
 end RTL;

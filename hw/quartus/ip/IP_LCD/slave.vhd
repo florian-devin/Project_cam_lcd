@@ -24,6 +24,7 @@ entity slave is
 
         bufferLength : out std_logic_vector(31 downto 0);
         startAddress : out std_logic_vector(31 downto 0);
+        memWritten : out std_logic;
 		updateCmd : out std_logic;
         updateParam : out std_logic;
         regData : out std_logic_vector(15 downto 0)
@@ -49,7 +50,8 @@ architecture RTL of slave is
             dataFifo : out std_logic_vector(8 downto 0);
             wrreq : out std_logic;
             bufferLength : out std_logic_vector(31 downto 0);
-            startAddress : out std_logic_vector(31 downto 0)
+            startAddress : out std_logic_vector(31 downto 0);
+            memWritten : out std_logic
         );	
 	end component slave_com;
 	
@@ -68,15 +70,15 @@ architecture RTL of slave is
 	end component config_update;
 
     component slave_fifo
-    port(
-        aclr		: IN STD_LOGIC ;
-		clock		: IN STD_LOGIC ;
-		data		: IN STD_LOGIC_VECTOR (8 DOWNTO 0);
-		rdreq		: IN STD_LOGIC ;
-		wrreq		: IN STD_LOGIC ;
-		empty		: OUT STD_LOGIC ;
-		q		: OUT STD_LOGIC_VECTOR (8 DOWNTO 0)
-    );
+        port(
+            aclr		: IN STD_LOGIC ;
+            clock		: IN STD_LOGIC ;
+            data		: IN STD_LOGIC_VECTOR (8 DOWNTO 0);
+            rdreq		: IN STD_LOGIC ;
+            wrreq		: IN STD_LOGIC ;
+            empty		: OUT STD_LOGIC ;
+            q		: OUT STD_LOGIC_VECTOR (8 DOWNTO 0)
+        );
     end component slave_fifo;
 
 	signal n_aclr : std_logic;
@@ -104,7 +106,8 @@ begin
             dataFifo => dataFifo_i,
             wrreq => wrreq_i,
             bufferLength => bufferLength,
-            startAddress => startAddress
+            startAddress => startAddress,
+            memWritten => memWritten
         );
 			
 	config_update_inst : config_update

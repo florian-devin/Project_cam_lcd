@@ -16,7 +16,6 @@ entity IP_LCD_wrapper is
 		readdataSlave 	: out std_logic_vector(31 downto 0);
 
         -- Avalon Master
-        memWritten : in std_logic;
         memRed : out std_logic;
         addressMaster : out std_logic_vector(31 downto 0);
         burstcount : out std_logic_vector(3 downto 0);
@@ -113,6 +112,7 @@ architecture RTL of IP_LCD_wrapper is
 
             bufferLength : out std_logic_vector(31 downto 0);
             startAddress : out std_logic_vector(31 downto 0);
+            memWritten : out std_logic;
             updateCmd : out std_logic;
             updateParam : out std_logic;
             regData : out std_logic_vector(15 downto 0)
@@ -133,6 +133,7 @@ architecture RTL of IP_LCD_wrapper is
     signal seqDone_i : std_logic;
     signal startAddress_i : std_logic_vector(31 downto 0);
     signal bufferLength_i : std_logic_vector(31 downto 0);
+    signal memWritten_i : std_logic;
 	
 begin
 
@@ -146,7 +147,7 @@ begin
             readdata                => readdataMaster,                
             startAddress            => startAddress_i,            
             bufferLength            => bufferLength_i,            
-            memWritten              => memWritten,              
+            memWritten              => memWritten_i,              
             gFIFO_rdreq		        => RdFifo_i,		        
             read                    => readMaster,                    
             burstcount              => burstcount,              
@@ -195,6 +196,7 @@ begin
             seqDone => seqDone_i,
             bufferLength => bufferLength_i,
             startAddress => startAddress_i,
+            memWritten => memWritten_i,
             updateCmd => updateCmd_i,
             updateParam => updateParam_i,
             regData => regData_i
