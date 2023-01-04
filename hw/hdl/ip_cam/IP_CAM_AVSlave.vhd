@@ -14,7 +14,6 @@ entity ip_cam_avslave is
         read_n          : in  std_logic;
         writedata       : in  std_logic_vector(31 downto 0);
         readdata        : out std_logic_vector(31 downto 0);
-        cs_n            : in  std_logic;
 
         -- Internal interface (to master)
         start_addr      : out std_logic_vector(31 downto 0);
@@ -66,7 +65,7 @@ begin
             start_addr      <= CamAddr;
             length          <= CamLength;
 
-            if write_n = '0' and cs_n = '0' then
+            if write_n = '0' then
                 case address is
                     when "000" => CamAddr       <= writedata;
                     when "001" => CamLength     <= writedata;
@@ -90,7 +89,7 @@ begin
             end if;
 
             
-            if read_n = '0' and cs_n = '0' then
+            if read_n = '0' then
                 case address is
                     when "000" => readdata      <= CamAddr;
                     when "001" => readdata      <= CamLength;

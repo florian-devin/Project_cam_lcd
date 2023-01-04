@@ -17,7 +17,6 @@ entity IP_CAM_Top is
 
         -- Avalon Slave interface
         AS_Address      : in  std_logic_vector(2 downto 0);
-        AS_Cs_n         : in  std_logic;
         AS_Write_n      : in  std_logic;
         AS_Datawr       : in  std_logic_vector(31 downto 0);
         AS_Read_n       : in  std_logic;
@@ -45,7 +44,6 @@ architecture rtl of IP_CAM_Top is
 
     signal data         : std_logic_vector(31 downto 0);
     signal empty        : std_logic;
-    --signal new_data     : std_logic;
     signal new_frame    : std_logic;
     signal ack          : std_logic;
 
@@ -63,7 +61,6 @@ begin
             read_n          => AS_Read_n,
             writedata       => AS_Datawr,
             readdata        => AS_Datard,
-            cs_n            => AS_Cs_n,
     
             -- Internal interface (to master)
             start_addr      => start_addr,
