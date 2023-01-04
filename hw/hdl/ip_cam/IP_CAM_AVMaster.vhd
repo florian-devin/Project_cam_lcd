@@ -51,13 +51,6 @@ begin
         if nReset = '0' then
             state_reg       <= ST_IDLE;
             addr_reg        <= start_addr;
-            --ack             <= '0';
-
-            --address         <= (others => '0');
-            --write_n         <= '1';
-            --byteEnable_n    <= (others => '1');
-            --burstCount      <= (others => '0');
-            --datawr          <= (others => '0');
 
         elsif rising_edge(clk) then
             state_reg   <= state_next;
@@ -72,9 +65,7 @@ begin
             case state_reg is 
                 when ST_IDLE =>
                     addr_next        <= start_addr;
-
                     ack             <= '0';
-
                     address         <= (others => '0');
                     write_n         <= '1';
                     byteEnable_n    <= (others => '1');
@@ -93,9 +84,6 @@ begin
                         datawr          <= data;
                         write_n         <= '0';
                         byteEnable_n    <= "0000";
-
-                    --elsif new_frame = '0' then
-                    --    state_next  <= ST_WAIT_LCD;
                     end if;
 
                 when ST_WRITE =>
@@ -104,10 +92,11 @@ begin
                         addr_next   <= std_logic_vector(unsigned(addr_reg) + 1);
                         --state_next  <= ST_WAIT_DATA;
                         write_n         <= '1';
+                        ack <= '1';
                     end if;
                 
                 when ST_ACK => 
-                    ack         <= '1';
+                    ack         <= '0';
                     state_next  <= ST_WAIT_DATA;
 
                 when ST_WAIT_LCD =>
