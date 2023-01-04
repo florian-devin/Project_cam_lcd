@@ -13,6 +13,7 @@ entity memoryAcc_wrapper is
         waitrequest             : in std_logic;
         readdata                : in std_logic_vector(31 downto 0);
         -- Slave signals
+        CAMaddress            : in std_logic_vector(31 downto 0);             
         startAddress            : in std_logic_vector(31 downto 0);             -- First address of the frame in memory
         bufferLength            : in std_logic_vector(31 downto 0);             -- Number of pixels to read in memory
         -- IP_CAM signal
@@ -22,10 +23,10 @@ entity memoryAcc_wrapper is
 
         -- To Avalon Bus
         read                : out std_logic;                                            -- Avalon Bus read 
+        write               : out std_logic;
         burstcount          : out std_logic_vector(3 downto 0);                         -- Avalon Bus burst count (nb of consecutive reads)
         address             : out std_logic_vector(31 downto 0);                        -- Avalon Bus address
-        -- To IP_CAM
-        memRed              : out std_logic;                                            -- Synchronization with IP_CAM, memory has been read completely by IP_LCD
+
         -- To LCD controller
         gFIFO_empty_LCD     : OUT STD_LOGIC ;
         gFIFO_q		        : OUT STD_LOGIC_VECTOR (15 DOWNTO 0);
@@ -51,6 +52,7 @@ architecture arch of memoryAcc_wrapper is
             readdata                : in std_logic_vector(31 downto 0);
             -- Slave signals
             globalFIFO_AlmostFull   : in std_logic;                                 -- global FIFO fill info
+            CAMaddress            : in std_logic_vector(31 downto 0);         
             startAddress            : in std_logic_vector(31 downto 0);             -- First address of the frame in memory
             bufferLength            : in std_logic_vector(31 downto 0);             -- Number of pixels to read in memory
             -- IP_CAM signal
@@ -60,10 +62,10 @@ architecture arch of memoryAcc_wrapper is
 
             -- To Avalon Bus
             read        : out std_logic;                                            -- Avalon Bus read 
+            write       : out std_logic;
             burstcount  : out std_logic_vector(3 downto 0);                         -- Avalon Bus burst count (nb of consecutive reads)
             address     : out std_logic_vector(31 downto 0);                        -- Avalon Bus address
-            -- To IP_CAM
-            memRed      : out std_logic;                                            -- Synchronization with IP_CAM, memory has been read completely by IP_LCD
+
             -- To global FIFO
             gFIFO_wrreq : out std_logic;                                            -- Write request to global FIFO
             gFIFO_data  : out std_logic_vector(15 downto 0)                        -- Data to push in global FIFO
@@ -106,14 +108,15 @@ begin
             waitrequest             => waitrequest,             
             readdata                => readdata,                
             globalFIFO_AlmostFull   => i_gFIFO_almost_full,   
+            CAMaddress              => CAMaddress,
             startAddress            => startAddress,            
             bufferLength            => bufferLength,            
             memWritten              => memWritten,              
             gFIFO_wrfull            => i_gFIFO_full,            
-            read                    => read,                    
+            read                    => read,      
+            write                   => write,              
             burstcount              => burstcount,              
-            address                 => address,                 
-            memRed                  => memRed,                  
+            address                 => address,                                   
             gFIFO_wrreq             => i_gFIFO_wrreq,             
             gFIFO_data              => i_gFIFO_data      
         );

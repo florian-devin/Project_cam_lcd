@@ -29,7 +29,6 @@ entity ReadMemCtrl is
         burstcount      : out std_logic_vector(3 downto 0);                     -- Avalon Bus burst count (nb of consecutive reads)
         im_burstcount   : out std_logic_vector(3 downto 0);                                        
         address         : out std_logic_vector(31 downto 0);                    -- Avalon Bus address
-        memRed          : out std_logic;                                        -- Synchronization with IP_CAM, memory has been read completely by IP_LCD
         nPixToCount     : out std_logic_vector(7 downto 0);                     -- Nb of pixel to read in the current burstread           
         clrPixCounter   : out std_logic;                                        -- Pixel counter reset signal
         clrBurstCounter : out std_logic                                         -- Burst counter reset signal
@@ -52,7 +51,6 @@ architecture RTL of ReadMemCtrl is
     signal i_write              : std_logic                     := '0';
     signal i_burstcount         : std_logic_vector(3 downto 0)  := (others => '0');
     signal i_address            : std_logic_vector(31 downto 0) := (others => '0');
-    signal i_memRed             : std_logic                     := '0';
     signal i_nPixToCount        : std_logic_vector(7 downto 0)  := (others => '0');            
     signal i_clrPixCounter      : std_logic                     := '0';
     signal i_clrBurstCounter    : std_logic                     := '0';
@@ -69,7 +67,6 @@ begin
                 i_write             <= '0';
                 i_burstcount        <= (others => '0');
                 i_address           <= (others => '0');
-                i_memRed            <= '0';
                 i_nPixToCount       <= (others => '0');            
                 i_clrPixCounter     <= '0';
                 i_clrBurstCounter   <= '0';
@@ -159,6 +156,7 @@ begin
                     
                     when wrCAM_init =>
                         i_clrPixCounter <= '1';                                 -- Clear pixel counter for new frame
+                        i_burstcount <= "0001";
                         i_address <= CAMaddress;                                                  
                         current_state <= wrCAM_rise;
 
@@ -189,8 +187,7 @@ begin
     write            <= i_write;       
     burstcount      <= i_burstcount;
     im_burstcount   <= i_burstcount;
-    address         <= i_address;
-    memRed          <= i_memRed;             
+    address         <= i_address;           
     nPixToCount     <= i_nPixToCount;                    
     clrPixCounter   <= i_clrPixCounter;      
     clrBurstCounter <= i_clrBurstCounter;       

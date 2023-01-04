@@ -23,6 +23,7 @@ architecture test of master_wrapper_tb is
     signal readdata                : std_logic_vector(31 downto 0);
     -- Slave signals
     signal globalFIFO_AlmostFull   : std_logic;                                 -- global FIFO fill info
+    signal CAMaddress            : std_logic_vector(31 downto 0);             
     signal startAddress            : std_logic_vector(31 downto 0);             -- First address of the frame in memory
     signal bufferLength            : std_logic_vector(31 downto 0);             -- Number of pixels to read in memory
     -- IP_CAM signal
@@ -31,11 +32,11 @@ architecture test of master_wrapper_tb is
     signal gFIFO_wrfull            : std_logic;
 
     -- To Avalon Bus
-    signal read        : std_logic;                                            -- Avalon Bus read 
+    signal read        : std_logic;
+    signal write       : std_logic;                                            -- Avalon Bus read 
     signal burstcount  : std_logic_vector(3 downto 0);                         -- Avalon Bus burst count (nb of consecutive reads)
     signal address     : std_logic_vector(31 downto 0);                        -- Avalon Bus address
-    -- To IP_CAM
-    signal memRed      : std_logic;                                            -- Synchronization with IP_CAM, memory has been read completely by IP_LCD
+                                      -- Synchronization with IP_CAM, memory has been read completely by IP_LCD
     -- To global FIFO
     signal gFIFO_wrreq : std_logic;                                            -- Write request to global FIFO
     signal gFIFO_data  : std_logic_vector(15 downto 0);                                         -- Burst counter reset signal
@@ -56,14 +57,15 @@ begin
         waitrequest             => waitrequest,             
         readdata                => readdata,                
         globalFIFO_AlmostFull   => globalFIFO_AlmostFull,   
+        CAMaddress              => CAMaddress,
         startAddress            => startAddress,            
         bufferLength            => bufferLength,            
         memWritten              => memWritten,              
         gFIFO_wrfull            => gFIFO_wrfull,            
         read                    => read,                    
+        write                   => write,
         burstcount              => burstcount,              
-        address                 => address,                 
-        memRed                  => memRed,                  
+        address                 => address,                                 
         gFIFO_wrreq             => gFIFO_wrreq,             
         gFIFO_data              => gFIFO_data              
            
@@ -211,12 +213,13 @@ begin
 
         wait for 10*TIME_DELTA;
         waitrequest <= '0';
-        wait until rising_edge (clk);
+        wait for CLK_PERIOD;
         -- simulate read data valid fom Avalon Bus
         readdatavalid<= '1';
         wait for CLK_PERIOD;
 		readdatavalid <= '0';
         wait until rising_edge(clk);
+
 
 
 	end procedure buflen9;
@@ -229,6 +232,7 @@ begin
         waitrequest              <= '0';
         readdata                 <= x"12345678";
         globalFIFO_AlmostFull    <= '0';
+        CAMaddress              <= x"0000FABC";
         startAddress             <= (others => '0');
         bufferLength             <= x"00000000";
         memWritten               <= '0';
@@ -243,17 +247,17 @@ begin
 
         buflen3;
 
-        wait until rising_edge(memRed);
-        wait for CLK_PERIOD;
+        wait until rising_edge(write);
+        wait for TIME_DELTA;
         
         buflen8;
 
-        wait until rising_edge(memRed);
-        wait for CLK_PERIOD;
+        wait until rising_edge(write);
+        wait for TIME_DELTA;
         
         buflen9;
 
-        wait until rising_edge(memRed);
+        wait until rising_edge(write);
         wait for 5*TIME_DELTA;
 
 		-- Indicate end of tb

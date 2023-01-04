@@ -14,6 +14,7 @@ entity master_wrapper is
         readdata                : in std_logic_vector(31 downto 0);
         -- Slave signals
         globalFIFO_AlmostFull   : in std_logic;                                 -- global FIFO fill info
+        CAMaddress            : in std_logic_vector(31 downto 0);             -- First address of the frame in memory
         startAddress            : in std_logic_vector(31 downto 0);             -- First address of the frame in memory
         bufferLength            : in std_logic_vector(31 downto 0);             -- Number of pixels to read in memory
         -- IP_CAM signal
@@ -23,10 +24,9 @@ entity master_wrapper is
 
         -- To Avalon Bus
         read        : out std_logic;                                            -- Avalon Bus read 
+        write       : out std_logic;
         burstcount  : out std_logic_vector(3 downto 0);                         -- Avalon Bus burst count (nb of consecutive reads)
         address     : out std_logic_vector(31 downto 0);                        -- Avalon Bus address
-        -- To IP_CAM
-        memRed      : out std_logic;                                            -- Synchronization with IP_CAM, memory has been read completely by IP_LCD
         -- To global FIFO
         gFIFO_wrreq : out std_logic;                                            -- Write request to global FIFO
         gFIFO_data  : out std_logic_vector(15 downto 0)                        -- Data to push in global FIFO
@@ -47,6 +47,7 @@ architecture arch of master_wrapper is
             waitrequest             : in std_logic;                                 -- Avalon Bus waitrequest
             masterFIFO_empty        : in std_logic;                                 -- master FIFO fill info   
             globalFIFO_AlmostFull   : in std_logic;                                 -- global FIFO fill info
+            CAMaddress              : in std_logic_vector(31 downto 0);
             startAddress            : in std_logic_vector(31 downto 0);             -- First address of the frame in memory
             bufferLength            : in std_logic_vector(31 downto 0);             -- Number of pixels to read in memory
             memWritten              : in std_logic;                                 -- Sync signal from IP_CAM
@@ -55,11 +56,11 @@ architecture arch of master_wrapper is
 
             --Outputs
             read            : out std_logic;                                        -- Avalon Bus read 
+            write           : out std_logic;
             im_read         : out std_logic;   
             burstcount      : out std_logic_vector(3 downto 0);                     -- Avalon Bus burst count (nb of consecutive reads)
             im_burstcount   : out std_logic_vector(3 downto 0);                                        
-            address         : out std_logic_vector(31 downto 0);                    -- Avalon Bus address
-            memRed          : out std_logic;                                        -- Synchronization with IP_CAM, memory has been read completely by IP_LCD
+            address         : out std_logic_vector(31 downto 0);                    -- Avalon Bus address                                     -- Synchronization with IP_CAM, memory has been read completely by IP_LCD
             nPixToCount     : out std_logic_vector(7 downto 0);                     -- Nb of pixel to read in the current burstread           
             clrPixCounter   : out std_logic;                                        -- Pixel counter reset signal
             clrBurstCounter : out std_logic                                         -- Burst counter reset signal
@@ -131,6 +132,15 @@ architecture arch of master_wrapper is
             readdata_out: OUT STD_LOGIC_VECTOR (31 DOWNTO 0)
         );
     end component data_rotation;
+
+    component Inverter
+	
+		Port ( 
+            i : in std_logic;
+            o : out std_logic 
+        );
+		
+	end component Inverter;
 	
     -- Internal signals
             
@@ -148,6 +158,9 @@ architecture arch of master_wrapper is
     signal isig_readdata           : std_logic_vector(31 downto 0);
     signal isig_readdatavalid      : std_logic;
 
+    signal sig_nclk : std_logic;
+
+
 begin
 
 	U0_ReadMemCtrl : ReadMemCtrl
@@ -162,6 +175,7 @@ begin
             waitrequest           => waitrequest,          
             MasterFIFO_empty      => isig_mFIFO_rdempty ,     
             globalFIFO_AlmostFull => globalFIFO_AlmostFull,
+            CAMaddress            => CAMaddress,
             startAddress          => startAddress,         
             bufferLength          => bufferLength,         
             memWritten            => memWritten,           
@@ -169,10 +183,10 @@ begin
             BurstCounter          => isig_BurstCounter,             
             read                  => read,                 
             im_read               => isig_read,
+            write                 => write,
             burstcount            => burstcount,
             im_burstcount         => isig_burstcount,           
-            address               => address,              
-            memRed                => memRed,               
+            address               => address,                            
             nPixToCount           => isig_nPixToCount,          
             clrPixCounter         => isig_clrPixCounter,        
             clrBurstCounter       => isig_clrBurstCounter      
@@ -228,7 +242,7 @@ begin
         port map(
             nReset      => nReset,
             trigger1    => isig_readdatavalid,
-            trigger2    => clk,
+            trigger2    => sig_nclk,
             clr         => isig_clrBurstCounter,
             cnt         => isig_BurstCounter    
         );
@@ -242,6 +256,12 @@ begin
             readdata_in => readdata,
             readdata_out => isig_readdata
         );
+
+    U6_clk_inv : Inverter
+    port map(
+        i => clk,
+        o => sig_nclk
+    );
 
 end arch;
 				
