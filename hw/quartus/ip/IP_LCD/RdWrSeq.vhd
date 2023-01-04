@@ -57,6 +57,7 @@ begin
                 i_mFIFO_rdreq <= '0';
                 curpix        <= (others => '0');
                 curBurstcount <= (others => '0');             
+                current_state <= idle;
 
 
     		elsif rising_edge(clk) then

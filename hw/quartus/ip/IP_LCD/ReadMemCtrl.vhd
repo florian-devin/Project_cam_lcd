@@ -70,7 +70,8 @@ begin
                 i_clrPixCounter     <= '0';
                 i_clrBurstCounter   <= '0';
                 i_DefaultBurstLength<= DefaultBurstLength;
-
+                current_state <= idle;
+                
     		elsif rising_edge(clk) then
 
 				case current_state is
