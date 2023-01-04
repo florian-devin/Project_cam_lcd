@@ -10,20 +10,21 @@ entity IP_LCD_wrapper is
 
         -- Avalon Slave
    		addressSlave 	: in std_logic_vector(2 downto 0);
-		write 		: in std_logic;
+		writeSlave 		: in std_logic;
 		readSlave 		: in std_logic;
-		writedata	: in std_logic_vector(31 downto 0);
+		writedataSlave	: in std_logic_vector(31 downto 0);
 		readdataSlave 	: out std_logic_vector(31 downto 0);
 
         -- Avalon Master
         memWritten : in std_logic;
-        memRed : out std_logic;
         addressMaster : out std_logic_vector(31 downto 0);
         burstcount : out std_logic_vector(3 downto 0);
         readMaster : out std_logic;
-        waitrequest : in std_logic;
-        readdatavalid : in std_logic;
+        writeMaster : out std_logic;
+        waitrequestMaster : in std_logic;
+        readdatavalidMaster : in std_logic;
         readdataMaster : in std_logic_vector(31 downto 0);
+        writedataMaster : in std_logic_vector(31 downto 0);
 
         -- LCD PINS
         CSX : out std_logic;
@@ -48,6 +49,7 @@ architecture RTL of IP_LCD_wrapper is
             waitrequest             : in std_logic;
             readdata                : in std_logic_vector(31 downto 0);
             -- Slave signals
+            CAMaddress            : in std_logic_vector(31 downto 0);
             startAddress            : in std_logic_vector(31 downto 0);             -- First address of the frame in memory
             bufferLength            : in std_logic_vector(31 downto 0);             -- Number of pixels to read in memory
             -- IP_CAM signal
@@ -57,10 +59,11 @@ architecture RTL of IP_LCD_wrapper is
 
             -- To Avalon Bus
             read                : out std_logic;                                            -- Avalon Bus read 
+            write               : out std_logic;                                            -- Avalon Bus read 
             burstcount          : out std_logic_vector(3 downto 0);                         -- Avalon Bus burst count (nb of consecutive reads)
             address             : out std_logic_vector(31 downto 0);                        -- Avalon Bus address
-            -- To IP_CAM
-            memRed              : out std_logic;                                            -- Synchronization with IP_CAM, memory has been read completely by IP_LCD
+            writedata            : out std_logic_vector(31 downto 0);
+
             -- To LCD controller
             gFIFO_empty_LCD     : OUT STD_LOGIC ;
             gFIFO_q		        : OUT STD_LOGIC_VECTOR (15 DOWNTO 0);
@@ -131,6 +134,7 @@ architecture RTL of IP_LCD_wrapper is
     signal updateParam_i : std_logic;
     signal regData_i : std_logic_vector(15 downto 0);
     signal seqDone_i : std_logic;
+    signal CAMaddress_i : std_logic_vector(31 downto 0);
     signal startAddress_i : std_logic_vector(31 downto 0);
     signal bufferLength_i : std_logic_vector(31 downto 0);
 	
@@ -141,17 +145,19 @@ begin
             clk     => clk,
             nReset  => nReset,
 
-            readdatavalid           => readdatavalid,           
-            waitrequest             => waitrequest,             
+            readdatavalid           => readdatavalidMaster,           
+            waitrequest             => waitrequestMaster,             
             readdata                => readdataMaster,                
+            CAMaddress              => CAMaddress_i
             startAddress            => startAddress_i,            
             bufferLength            => bufferLength_i,            
             memWritten              => memWritten,              
             gFIFO_rdreq		        => RdFifo_i,		        
             read                    => readMaster,                    
+            write                   => writeMaster,
             burstcount              => burstcount,              
-            address                 => addressMaster,                 
-            memRed                  => memRed,                  
+            address                 => addressMaster,
+            writedata               => writedataMaster,                                   
             gFIFO_empty_LCD         => gFIFO_empty_LCD_i,         
             gFIFO_q		            => RdData_i ,		            
             gFIFO_almost_empty	    => gFIFO_almost_empty_i,	    
