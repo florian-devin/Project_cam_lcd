@@ -29,6 +29,7 @@ entity ReadMemCtrl is
         burstcount      : out std_logic_vector(3 downto 0);                     -- Avalon Bus burst count (nb of consecutive reads)
         im_burstcount   : out std_logic_vector(3 downto 0);                                        
         address         : out std_logic_vector(31 downto 0);                    -- Avalon Bus address
+        writedata       : out std_logic_vector(31 downto 0);
         nPixToCount     : out std_logic_vector(7 downto 0);                     -- Nb of pixel to read in the current burstread           
         clrPixCounter   : out std_logic;                                        -- Pixel counter reset signal
         clrBurstCounter : out std_logic                                         -- Burst counter reset signal
@@ -49,6 +50,7 @@ architecture RTL of ReadMemCtrl is
     --internal signals
     signal i_read               : std_logic                     := '0';
     signal i_write              : std_logic                     := '0';
+    signal i_writedata          : std_logic_vector(31 downto 0) := x"00000000";
     signal i_burstcount         : std_logic_vector(3 downto 0)  := (others => '0');
     signal i_address            : std_logic_vector(31 downto 0) := (others => '0');
     signal i_nPixToCount        : std_logic_vector(7 downto 0)  := (others => '0');            
@@ -65,6 +67,7 @@ begin
                 --reset values
                 i_read              <= '0';
                 i_write             <= '0';
+                i_writedata         <= x"00000000";
                 i_burstcount        <= (others => '0');
                 i_address           <= (others => '0');
                 i_nPixToCount       <= (others => '0');            
@@ -157,7 +160,8 @@ begin
                     when wrCAM_init =>
                         i_clrPixCounter <= '1';                                 -- Clear pixel counter for new frame
                         i_burstcount <= "0001";
-                        i_address <= CAMaddress;                                                  
+                        i_address <= CAMaddress;
+                        i_writedata <= x"00000001";                                                  
                         current_state <= wrCAM_rise;
 
                     when wrCAM_rise =>
@@ -171,6 +175,7 @@ begin
 
                     when wrCAM_fall =>
                         i_write <= '0';
+                        i_writedata <= x"00000000";
                         current_state <= Idle;
 
                     when others =>
@@ -187,7 +192,8 @@ begin
     write            <= i_write;       
     burstcount      <= i_burstcount;
     im_burstcount   <= i_burstcount;
-    address         <= i_address;           
+    address         <= i_address; 
+    writedata       <= i_writedata;          
     nPixToCount     <= i_nPixToCount;                    
     clrPixCounter   <= i_clrPixCounter;      
     clrBurstCounter <= i_clrBurstCounter;       

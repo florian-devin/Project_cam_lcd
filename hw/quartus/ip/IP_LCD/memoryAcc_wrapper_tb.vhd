@@ -32,10 +32,11 @@ architecture test of memoryAcc_wrapper_tb is
 
     -- To Avalon Bus
     signal read                : std_logic;                                            -- Avalon Bus read 
-    signal write                : std_logic;
+    signal write               : std_logic;
     signal burstcount          : std_logic_vector(3 downto 0);                         -- Avalon Bus burst count (nb of consecutive reads)
     signal address             : std_logic_vector(31 downto 0);                        -- Avalon Bus address
-   
+    signal writedata           : std_logic_vector(31 downto 0);
+
     -- To LCD controller
     signal gFIFO_empty_LCD     : STD_LOGIC ;
     signal gFIFO_q		        : STD_LOGIC_VECTOR (15 DOWNTO 0);
@@ -68,7 +69,8 @@ begin
         read                    => read,                    
         write                   => write,
         burstcount              => burstcount,              
-        address                 => address,                   
+        address                 => address,
+        writedata               => writedata,                   
         gFIFO_empty_LCD         => gFIFO_empty_LCD,         
         gFIFO_q		            => gFIFO_q,		            
         gFIFO_almost_empty	    => gFIFO_almost_empty,	    

@@ -26,6 +26,7 @@ entity memoryAcc_wrapper is
         write               : out std_logic;
         burstcount          : out std_logic_vector(3 downto 0);                         -- Avalon Bus burst count (nb of consecutive reads)
         address             : out std_logic_vector(31 downto 0);                        -- Avalon Bus address
+        writedata            : out std_logic_vector(31 downto 0);
 
         -- To LCD controller
         gFIFO_empty_LCD     : OUT STD_LOGIC ;
@@ -65,6 +66,7 @@ architecture arch of memoryAcc_wrapper is
             write       : out std_logic;
             burstcount  : out std_logic_vector(3 downto 0);                         -- Avalon Bus burst count (nb of consecutive reads)
             address     : out std_logic_vector(31 downto 0);                        -- Avalon Bus address
+            writedata   : out std_logic_vector(31 downto 0);
 
             -- To global FIFO
             gFIFO_wrreq : out std_logic;                                            -- Write request to global FIFO
@@ -116,7 +118,8 @@ begin
             read                    => read,      
             write                   => write,              
             burstcount              => burstcount,              
-            address                 => address,                                   
+            address                 => address,
+            writedata               => writedata,                                   
             gFIFO_wrreq             => i_gFIFO_wrreq,             
             gFIFO_data              => i_gFIFO_data      
         );

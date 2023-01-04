@@ -27,6 +27,7 @@ entity master_wrapper is
         write       : out std_logic;
         burstcount  : out std_logic_vector(3 downto 0);                         -- Avalon Bus burst count (nb of consecutive reads)
         address     : out std_logic_vector(31 downto 0);                        -- Avalon Bus address
+        writedata   : out std_logic_vector(31 downto 0);
         -- To global FIFO
         gFIFO_wrreq : out std_logic;                                            -- Write request to global FIFO
         gFIFO_data  : out std_logic_vector(15 downto 0)                        -- Data to push in global FIFO
@@ -61,6 +62,7 @@ architecture arch of master_wrapper is
             burstcount      : out std_logic_vector(3 downto 0);                     -- Avalon Bus burst count (nb of consecutive reads)
             im_burstcount   : out std_logic_vector(3 downto 0);                                        
             address         : out std_logic_vector(31 downto 0);                    -- Avalon Bus address                                     -- Synchronization with IP_CAM, memory has been read completely by IP_LCD
+            writedata       : out std_logic_vector(31 downto 0);
             nPixToCount     : out std_logic_vector(7 downto 0);                     -- Nb of pixel to read in the current burstread           
             clrPixCounter   : out std_logic;                                        -- Pixel counter reset signal
             clrBurstCounter : out std_logic                                         -- Burst counter reset signal
@@ -187,6 +189,7 @@ begin
             burstcount            => burstcount,
             im_burstcount         => isig_burstcount,           
             address               => address,                            
+            writedata			  => writedata,
             nPixToCount           => isig_nPixToCount,          
             clrPixCounter         => isig_clrPixCounter,        
             clrBurstCounter       => isig_clrBurstCounter      
