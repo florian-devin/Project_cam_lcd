@@ -9,24 +9,6 @@
 ///////////////////////// END INCLUDE
 
 
-int main() 
-{
-    
-    /* Defines register name associated to address offset
- *
- */
-enum address_mapping{
-    regFIFOStatus           = 0x00,
-    regMemStartAddress      = 0x04,
-    regMemBufferLength      = 0x08,
-    regCfgCmd               = 0x0C,
-    regCfgParam             = 0x10,
-	regMemWritten           = 0x14,
-	regCAMaddress            = 0x18
-
-}; /* address_mapping */
-
-
 #define START_ADDRESS (HPS_0_BRIDGES_BASE)		// Beginning of data address in memory
 #define BUFFER_LENGTH (0X00000200)		// Number of pixels in image set to 48
 #define CAM_ADDRESS (0x000EAEEAA)	// Address of the camera
@@ -35,6 +17,18 @@ enum address_mapping{
 int main()
 {
 	volatile uint16_t i = 0;
+	
+	 /* Defines register name associated to address offset
+	 *
+	 */
+	enum address_mapping{
+		regFIFOStatus           = 0x00,
+		regMemStartAddress      = 0x04,
+		regMemBufferLength      = 0x08,
+		regCfgCmd               = 0x0C,
+		regCfgParam             = 0x10,
+		regMemWritten           = 0x14,
+		regCAMaddress            = 0x18
 
     //reset timings at the beginning ?
 	// just insert wait loop
