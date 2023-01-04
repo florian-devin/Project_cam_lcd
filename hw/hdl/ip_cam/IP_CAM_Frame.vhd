@@ -323,18 +323,16 @@ begin
             state <= ST_SAMPLE_GREEN2;
 --------------------------------------------------------------
 -- Wait for new line to start with RED and GREEN1 pixels
+-- Or end of frame
             when ST_WAIT_LINE_CHANGE_RG =>
             if Hsync = '1' and old_hsync ='0' then
                 state <= ST_SAMPLE_RED;
                 first_red <= '1';
-            else null;
+            else Vsync = '0' then
+                capture_done <= '1';
+                state <= ST_IDLE;
             end if;
             old_hsync <= Hsync;
---------------------------------------------------------------
--- end of the frame
-            when ST_END =>
-            capture_done <= '1';
-            state <= ST_IDLE;
 --------------------------------------------------------------
 -- In case of unexpected state, send to ST_IDLE
             when others => state <= ST_IDLE;
