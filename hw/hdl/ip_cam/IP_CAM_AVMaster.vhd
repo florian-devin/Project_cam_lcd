@@ -38,7 +38,7 @@ architecture comp of ip_cam_avmaster is
     --constant LCD_addr : std_logic_vector(31 downto 0) := (others => '1');  -- TODO : Change LCD addr
     -- State reg
     type fsm_states is (
-        ST_IDLE, ST_WAIT_DATA, ST_WRITE, ST_ACK, ST_WAIT_LCD, ST_WRITE_LCD
+        ST_IDLE, ST_WAIT_DATA, ST_WRITE, ST_ACK, ST_WRITE_LCD
     );
     signal state_reg, state_next    : fsm_states;
 
@@ -70,7 +70,7 @@ begin
         end if;
         end process;
 
-        NEXT_STATE : process(clk, nReset, new_frame, waitRequest, state_reg, fifo_empty, length, start_addr, addr_reg, data, addr_reg)
+        NEXT_STATE : process(clk, nReset, new_frame, waitRequest, state_reg, fifo_empty, length, start_addr, addr_reg, data)
         begin
             state_next  <= state_reg;
             addr_next   <= addr_reg;
@@ -118,13 +118,6 @@ begin
                 when ST_ACK => 
                     ack         <= '0';
                     state_next  <= ST_WAIT_DATA;
-
-                when ST_WAIT_LCD =>
-                    --state_next      <= ST_WRITE_LCD;
-                    --address         <= LCD_addr;
-                    --datawr(1)       <= '1';
-                    --write_n         <= '0';
-                    --byteEnable_n    <= "0000";
 
                 when ST_WRITE_LCD => 
                     if waitRequest = '0' then
