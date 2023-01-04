@@ -33,23 +33,32 @@ bool trdb_d5m_read(i2c_dev *i2c, uint8_t register_offset, uint16_t *data) {
 
 int Init_Cam(void) {
 
-    
-  //  i2c_dev i2c = i2c_inst((void *) TRDB_D5M_0_I2C_0_BASE);
-  //  i2c_init(&i2c, I2C_FREQ);
-//
-  //  bool success = true;
-//
-  //  /* write the 16-bit value 23 to register 10 */
-  //  success &= trdb_d5m_write(&i2c, 10, 23);
-//
-  //  /* read from register 10, put data in readdata */
-  //  uint16_t readdata = 0;
-  //  success &= trdb_d5m_read(&i2c, 10, &readdata);
-//
-  //  if (success) {
-  //      return EXIT_SUCCESS;
-  //  } else {
-  //      return EXIT_FAILURE;
-  //  }
+    i2c_dev i2c = i2c_inst((void *) TRDB_D5M_0_I2C_0_BASE);
+    i2c_init(&i2c, I2C_FREQ);
+    bool success = true;
+    success &= trdb_d5m_write(&i2c, 0x1 , 54);
+    success &= trdb_d5m_write(&i2c, 0x2 , 16);
+    success &= trdb_d5m_write(&i2c, 0x3 , 1919);
+    success &= trdb_d5m_write(&i2c, 0x4 , 2559);
+    success &= trdb_d5m_write(&i2c, 0x22, 3);
+    success &= trdb_d5m_write(&i2c, 0x23, 3);
+    success &= trdb_d5m_write(&i2c, 0x62, 1);
+    success &= trdb_d5m_write(&i2c, 0x20, 0);
+    success &= trdb_d5m_write(&i2c, 0x4B, 0);
+
+
+    // PLL config
+    success &= trdb_d5m_write(&i2c, 0x10, 0x51);//PLL power up
+    success &= trdb_d5m_write(&i2c, 0x11, 0x1605);//PLL n = 4 m = 16
+    success &= trdb_d5m_write(&i2c, 0x12, 0x10);//PLL p1 = 16
+    for (int i = 0; i < 1000000; i++);
+    success &= trdb_d5m_write(&i2c, 0x10, 0x53); //use pll
+    for (int i = 0; i < 1000000; i++);
+
+    if (success) {
+        return EXIT_SUCCESS;
+    } else {
+        return EXIT_FAILURE;
+    }
     
 }

@@ -150,7 +150,6 @@ begin
 
         -- Avalon Slave interface
         AS_Address      => AS_Address,
-        AS_Cs_n         => AS_Cs_n,
         AS_Write_n      => AS_Write_n,
         AS_Datawr       => AS_Datawr,
         AS_Read_n       => AS_Read_n,
