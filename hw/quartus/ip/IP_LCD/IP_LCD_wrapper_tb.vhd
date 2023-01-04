@@ -218,9 +218,9 @@ begin
 
     buflen9;
 
-    wait for 20*TIME_DELTA;
+    wait for 10*TIME_DELTA;
     buflen9;
-    wait for 30*TIME_DELTA;
+    wait for 10*TIME_DELTA;
 
     sim_finished <= true;
     wait;

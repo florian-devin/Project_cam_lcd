@@ -25,6 +25,8 @@ architecture test of slave_tb is
 
     signal bufferLength : std_logic_vector(31 downto 0);
     signal startAddress : std_logic_vector(31 downto 0);
+    signal memWritten : std_logic;
+    signal CAMaddress : std_logic_vector(31 downto 0);
     signal updateCmd : std_logic;
     signal updateParam : std_logic;
     signal regData : std_logic_vector(15 downto 0);
@@ -48,6 +50,8 @@ begin
         seqDone => seqDone,
         bufferLength => bufferLength,
         startAddress => startAddress,
+        memWritten => memWritten,
+        CAMaddress => CAMaddress,
         updateCmd => updateCmd,
         updateParam => updateParam,
         regData => regData);

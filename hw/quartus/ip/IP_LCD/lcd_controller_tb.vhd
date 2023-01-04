@@ -85,6 +85,9 @@ begin
         wait for 200 ns;
         FifoEmpty <= '0';
 
+        wait for 100 ns;
+        FifoEmpty <= '1';
+
 		wait;
 	end process;
 	
