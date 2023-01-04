@@ -47,7 +47,8 @@ architecture comp of ip_cam_avmaster is
     signal write_data               : std_logic_vector(31 downto 0);
 
     signal capture_done_req         : std_logic;
-    signal capture_done_rst         : std_logic;
+    signal capture_done_rst_reg     : std_logic;
+    signal capture_done_rst_next    : std_logic;  
 
     signal address_next             : std_logic_vector(31 downto 0);
     signal write_n_next             : std_logic;
@@ -69,60 +70,79 @@ begin
     STATE_LOGIC : process(clk, nReset, capture_done, start_addr, addr_reg)
     begin
         if nReset = '0' then
-            state_reg           <= ST_IDLE;
-            addr_reg            <= start_addr;
-            capture_done_req    <= '0';
-            address_reg         <= (others => '0');
-            write_n_reg         <= '1';
-            byteEnable_n_reg    <= (others => '1');
-            burstCount_reg      <= (others => '0');
-            datawr_reg          <= (others => '0');
-            ack_reg             <= '0';
+            state_reg               <= ST_IDLE;
+            addr_reg                <= start_addr;
+            capture_done_req        <= '0';
+            address_reg             <= (others => '0');
+            write_n_reg             <= '1';
+            byteEnable_n_reg        <= (others => '1');
+            burstCount_reg          <= (others => '0');
+            datawr_reg              <= (others => '0');
+            ack_reg                 <= '0';
+            capture_done_rst_reg    <= '0';
 
         elsif rising_edge(clk) then
-            state_reg           <= state_next;
-            addr_reg            <= addr_next;
-            address_reg         <= address_next;
-            write_n_reg         <= write_n_next;
-            byteEnable_n_reg    <= byteEnable_n_next;
-            burstCount_reg      <= burstCount_next;
-            datawr_reg          <= datawr_next;
-            ack_reg             <= ack_next;
+            state_reg               <= state_next;
+            addr_reg                <= addr_next;
+            address_reg             <= address_next;
+            write_n_reg             <= write_n_next;
+            byteEnable_n_reg        <= byteEnable_n_next;
+            burstCount_reg          <= burstCount_next;
+            datawr_reg              <= datawr_next;
+            ack_reg                 <= ack_next;
+            capture_done_rst_reg    <= capture_done_rst_next;
             if (capture_done = '1') then
                 capture_done_req <= '1';
-            elsif (capture_done_rst = '1') then
+            elsif (capture_done_rst_reg = '1') then
                 capture_done_req <= '0';
             end if;
         end if;
         end process;
 
-        NEXT_STATE : process(clk, nReset, new_frame, waitRequest, state_reg, fifo_empty, length, start_addr, addr_reg, data)
+        NEXT_STATE : process(clk,
+                             nReset,
+                             new_frame, 
+                             waitRequest, 
+                             state_reg, 
+                             fifo_empty, 
+                             length, 
+                             start_addr, 
+                             addr_reg, 
+                             data,
+                             address_reg,
+                             write_n_reg,
+                             byteEnable_n_reg,
+                             datawr_reg,
+                             ack_reg,
+                             capture_done_req,
+                             LCD_addr)
         begin
-            state_next          <= state_reg;
-            addr_next           <= addr_reg;
-            address_next        <= address_reg;
-            write_n_next        <= write_n_reg;
-            byteEnable_n_next   <= byteEnable_n_reg;
-            burstCount_next     <= burstCount_reg;
-            datawr_next         <= datawr_reg;
-            ack_next            <= ack_reg;
+            state_next              <= state_reg;
+            addr_next               <= addr_reg;
+            address_next            <= address_reg;
+            write_n_next            <= write_n_reg;
+            byteEnable_n_next       <= byteEnable_n_reg;
+            burstCount_next         <= burstCount_reg;
+            datawr_next             <= datawr_reg;
+            ack_next                <= ack_reg;
+            capture_done_rst_next   <= capture_done_rst_reg;
             case state_reg is 
                 when ST_IDLE =>
-                    addr_next           <= start_addr;
-                    ack_next            <= '0';
-                    address_next        <= (others => '0');
-                    write_n_next        <= '1';
-                    byteEnable_n_next   <= (others => '1');
-                    burstCount_next     <= (others => '0');
-                    datawr_next         <= (others => '0');
-                    capture_done_rst    <= '0';
+                    addr_next               <= start_addr;
+                    ack_next                <= '0';
+                    address_next            <= (others => '0');
+                    write_n_next            <= '1';
+                    byteEnable_n_next       <= (others => '1');
+                    burstCount_next         <= (others => '0');
+                    datawr_next             <= (others => '0');
+                    capture_done_rst_reg    <= '0';
 
                     if new_frame = '1' then
                         state_next      <= ST_WAIT_DATA;
                     end if;
 
                 when ST_WAIT_DATA => 
-                    ack <= '0';
+                    ack_next <= '0';
                     if fifo_empty = '0' then
                         state_next          <= ST_WRITE;
                         address_next        <= addr_reg;
@@ -130,9 +150,9 @@ begin
                         write_n_next        <= '0';
                         byteEnable_n_next   <= "0000";
                     elsif capture_done_req = '1' then
-                        state_next          <= ST_WRITE_LCD;
-                        addr_next           <= start_addr;
-                        capture_done_rst    <= '1';
+                        state_next              <= ST_WRITE_LCD;
+                        addr_next               <= start_addr;
+                        capture_done_rst_next   <= '1';
                     end if;
                     
                 when ST_WRITE =>
