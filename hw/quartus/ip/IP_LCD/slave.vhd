@@ -25,6 +25,7 @@ entity slave is
         bufferLength : out std_logic_vector(31 downto 0);
         startAddress : out std_logic_vector(31 downto 0);
         memWritten : out std_logic;
+        CAMaddress : out std_logic_vector(31 downto 0);
 		updateCmd : out std_logic;
         updateParam : out std_logic;
         regData : out std_logic_vector(15 downto 0)
@@ -51,7 +52,8 @@ architecture RTL of slave is
             wrreq : out std_logic;
             bufferLength : out std_logic_vector(31 downto 0);
             startAddress : out std_logic_vector(31 downto 0);
-            memWritten : out std_logic
+            memWritten : out std_logic;
+            CAMaddress : out std_logic_vector(31 downto 0)
         );	
 	end component slave_com;
 	
@@ -107,7 +109,8 @@ begin
             wrreq => wrreq_i,
             bufferLength => bufferLength,
             startAddress => startAddress,
-            memWritten => memWritten
+            memWritten => memWritten,
+            CAMaddress => CAMaddress
         );
 			
 	config_update_inst : config_update

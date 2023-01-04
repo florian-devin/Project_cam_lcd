@@ -23,7 +23,7 @@ entity IP_LCD_wrapper is
         waitrequestMaster : in std_logic;
         readdatavalidMaster : in std_logic;
         readdataMaster : in std_logic_vector(31 downto 0);
-        writedataMaster : in std_logic_vector(31 downto 0);
+        writedataMaster : out std_logic_vector(31 downto 0);
 
         -- LCD PINS
         CSX : out std_logic;
@@ -116,6 +116,7 @@ architecture RTL of IP_LCD_wrapper is
             bufferLength : out std_logic_vector(31 downto 0);
             startAddress : out std_logic_vector(31 downto 0);
             memWritten : out std_logic;
+            CAMaddress : out std_logic_vector(31 downto 0);
             updateCmd : out std_logic;
             updateParam : out std_logic;
             regData : out std_logic_vector(15 downto 0)
@@ -149,7 +150,7 @@ begin
             readdatavalid           => readdatavalidMaster,           
             waitrequest             => waitrequestMaster,             
             readdata                => readdataMaster,                
-            CAMaddress              => CAMaddress_i
+            CAMaddress              => CAMaddress_i,
             startAddress            => startAddress_i,            
             bufferLength            => bufferLength_i,            
             memWritten              => memWritten_i,              
@@ -191,9 +192,9 @@ begin
             clk => clk,
             nReset => nReset,
             address => addressSlave,
-            write => write,
+            write => writeSlave,
             read => readSlave,
-            writedata => writedata,
+            writedata => writedataSlave,
             readdata => readdataSlave,
             FIFO_full => gFIFO_full_i,
             FIFO_almost_full => gFIFO_almost_full_i,
@@ -203,6 +204,7 @@ begin
             bufferLength => bufferLength_i,
             startAddress => startAddress_i,
             memWritten => memWritten_i,
+            CAMaddress => CAMaddress_i,
             updateCmd => updateCmd_i,
             updateParam => updateParam_i,
             regData => regData_i

@@ -194,8 +194,6 @@ architecture rtl of DE0_Nano_SoC_TRDB_D5M_LT24_top_level is
             ip_lcd_0_conduit_csx_export         : out   std_logic;                                        -- export
             ip_lcd_0_conduit_d_export           : out   std_logic_vector(15 downto 0);                    -- export
             ip_lcd_0_conduit_dcx_export         : out   std_logic;                                        -- export
-            ip_lcd_0_conduit_mr_export          : out   std_logic;                                        -- export
-            ip_lcd_0_conduit_mw_export          : in    std_logic                     := 'X';             -- export
             ip_lcd_0_conduit_rdx_export         : out   std_logic;                                        -- export
             ip_lcd_0_conduit_wrx_export         : out   std_logic;                                        -- export
             pio_leds_external_connection_export : out   std_logic_vector(7 downto 0);                     -- export
@@ -279,8 +277,6 @@ begin
         ip_lcd_0_conduit_csx_export         => GPIO_0_LT24_CS_N,
         ip_lcd_0_conduit_d_export           => GPIO_0_LT24_D,
         ip_lcd_0_conduit_dcx_export         => GPIO_0_LT24_RS,
-        ip_lcd_0_conduit_mr_export          => GPIO_1_D5M_TRIGGER,
-        ip_lcd_0_conduit_mw_export          => GPIO_1_D5M_D(0),
         ip_lcd_0_conduit_rdx_export         => GPIO_0_LT24_RD_N,
         ip_lcd_0_conduit_wrx_export         => GPIO_0_LT24_WR_N,
         ip_lcd_0_conduit_lcdon_export       => GPIO_0_LT24_LCD_ON,

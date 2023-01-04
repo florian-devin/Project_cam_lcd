@@ -24,7 +24,8 @@ entity slave_com is
         wrreq : out std_logic;
         bufferLength : out std_logic_vector(31 downto 0);
         startAddress : out std_logic_vector(31 downto 0);
-        memWritten : out std_logic
+        memWritten : out std_logic;
+        CAMaddress : out std_logic_vector(31 downto 0)
 	);
 end slave_com;
 
@@ -36,6 +37,7 @@ architecture RTL of slave_com is
     signal iregMemBufferLength : std_logic_vector(31 downto 0) := (others => '0');
     signal iregCfgCmd : std_logic_vector(31 downto 0) := (others => '0');
     signal iregCfgParam : std_logic_vector(31 downto 0) := (others => '0');
+    signal iregCamAddress : std_logic_vector(31 downto 0) := (others => '0');
 	
     signal iDataFifo : std_logic_vector(8 downto 0) := (others => '0');
     signal iWrreq : std_logic := '0';
@@ -46,6 +48,7 @@ architecture RTL of slave_com is
     signal iNewCmd : std_logic := '0';
     signal iNewParam : std_logic := '0';
     signal iCamFinished : std_logic := '0';
+    signal iCamAddress : std_logic_vector(31 downto 0) := (others => '0');
 begin
 
     process(clk, nReset, iregCfgCmd, iregCfgParam, iregMemStartAddress, iregMemBufferLength)
@@ -58,10 +61,12 @@ begin
             iWrreq <= '0';
             iMemWritten <= '0';
             prevCamFinished := '0';
+            iCamAddress <= (others => '0');
 
         elsif rising_edge(clk) then
             iBufferLength <= iregMemBufferLength(31 downto 0);
             iStartAddress <= iregMemStartAddress(31 downto 0);
+            iCamAddress <= iregCamAddress(31 downto 0);
             iMemWritten <= '0';
             iDataFifo <= (others => '0');
             iWrreq <= '0';
@@ -98,6 +103,7 @@ begin
             iregCfgParam <= (others => '0');
             iNewParam <= '0';
             iNewCmd <= '0';
+            iregCamAddress <= (others => '0');
 
         elsif rising_edge(clk) then
             iNewParam <= '0';
@@ -115,6 +121,7 @@ begin
                         iregCfgParam <= writedata;
                         iNewParam <= '1';
                     when "101" => iCamFinished <= '1';
+                    when "110" => iregCamAddress <= writedata;
                     when others => null;
                 end case;
             end if;
@@ -158,5 +165,6 @@ begin
     bufferLength <= iBufferLength;
     startAddress <= iStartAddress;
     memWritten <= iMemWritten;
+    CAMaddress <= iCamAddress;
 
 end RTL;
