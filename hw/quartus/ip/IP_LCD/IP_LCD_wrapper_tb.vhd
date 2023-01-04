@@ -37,6 +37,8 @@ architecture test of IP_LCD_wrapper_tb is
     signal RDX : std_logic;
     signal WRX : std_logic;
     signal D : std_logic_vector(15 downto 0);
+    signal LCD_ON : std_logic;
+    signal LCD_RESET : std_logic;
 
 begin
 
@@ -63,7 +65,9 @@ begin
         D_CX => D_CX,
         RDX => RDX,
         WRX => WRX,
-        D => D         
+        D => D,
+        LCD_ON => LCD_ON,
+        LCD_RESET => LCD_RESET 
     );
 	
 	-- Generate CLK signal

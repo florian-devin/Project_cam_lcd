@@ -30,7 +30,9 @@ entity IP_LCD_wrapper is
         D_CX : out std_logic;
         RDX : out std_logic;
         WRX : out std_logic;
-        D : out std_logic_vector(15 downto 0)
+        D : out std_logic_vector(15 downto 0);
+        LCD_ON : out std_logic;
+        LCD_RESET : out std_logic
         );
 		
 end IP_LCD_wrapper;
@@ -197,6 +199,12 @@ begin
             updateParam => updateParam_i,
             regData => regData_i
 	    );
+
+    process(clk, nReset)
+    begin
+        LCD_ON <= '1';
+        LCD_RESET <= nReset;
+    end process;
 	
 end RTL;
 				
