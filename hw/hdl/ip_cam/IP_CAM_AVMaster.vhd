@@ -115,7 +115,9 @@ begin
                              datawr_reg,
                              ack_reg,
                              capture_done_req,
-                             LCD_addr)
+                             LCD_addr,
+                             burstCount_reg,
+                             capture_done_rst_reg)
         begin
             state_next              <= state_reg;
             addr_next               <= addr_reg;
