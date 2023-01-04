@@ -77,6 +77,9 @@ architecture bench of ip_cam_tb is
    constant IP_CAM_STOP_REG      : std_logic_vector(2 downto 0)  := "100"; --WO
    constant IP_CAM_SNAPSHOT_REG  : std_logic_vector(2 downto 0)  := "101"; --WO
 
+   constant START_ADDR_REG_VAL   : std_logic_vector(31 downto 0) := x"0000000F";
+   constant LENGTH_REG_VAL       : std_logic_vector(31 downto 0) := x"00000FFF";
+
    -- CHECK_DATA_OUT
    signal addr_exp         : std_logic_vector(31 downto 0) := (others => '0');
    signal data_exp         : std_logic_vector(31 downto 0) := (others => '0');
@@ -167,19 +170,23 @@ begin
    begin
       if (falling_edge(AM_Write_n)) then
          -- AM_Address check
-         assert(AM_Address = addr_exp);
+         assert(AM_Address = addr_exp)
          report "IP_CAM_AM_Address : AM_Address error. Avalon bus value : " & 
            integer'image(to_integer(unsigned(AM_Address))) & " expected value : " & 
            integer'image(to_integer(unsigned(addr_exp))) severity error;
 
          -- AM_Datawr check
-         assert(AM_Datawr = data_exp);
+         assert(AM_Datawr = data_exp)
          report "IP_CAM_AM_Datawr : AM_Datawr error. Avalon bus value : " & 
            integer'image(to_integer(unsigned(AM_Datawr))) & " expected value : " & 
            integer'image(to_integer(unsigned(data_exp))) severity error;
 
       elsif (rising_edge(AM_Write_n)) then
-         addr_exp          <= std_logic_vector(unsigned(addr_exp) + 1);
+         if (addr_exp = std_logic_vector(unsigned(START_ADDR_REG_VAL) + unsigned(LENGTH_REG_VAL))) then
+            addr_exp       <= START_ADDR_REG_VAL;
+         else
+            addr_exp       <= std_logic_vector(unsigned(addr_exp) + 1);
+         end if;
 
          data_red1_exp     <= std_logic_vector(unsigned(data_red1_exp)    + 4);
          data_green1a_exp  <= "0" & std_logic_vector(resize(unsigned(data_green1a_exp), 6) + 4);
@@ -194,7 +201,7 @@ begin
       end if;
 
       if (nReset = '0') then
-         addr_exp          <= x"0000000F";
+         addr_exp          <= START_ADDR_REG_VAL;
          data_red1_exp     <= "000000" ; -- 0
          data_green1a_exp  <= "0000001"; -- 1
          data_green1b_exp  <= "0110000"; -- 
@@ -358,9 +365,9 @@ begin
       AS_ReadReg (IP_CAM_STATUS_REG);
 
       --start aquisition
-      AS_WriteReg(IP_CAM_ADDR_REG, x"0000000F");
+      AS_WriteReg(IP_CAM_ADDR_REG, START_ADDR_REG_VAL);
       AS_ReadReg (IP_CAM_ADDR_REG);
-      AS_WriteReg(IP_CAM_LENGTH_REG, x"FFFFFFFF");
+      AS_WriteReg(IP_CAM_LENGTH_REG, LENGTH_REG_VAL);
       AS_ReadReg (IP_CAM_LENGTH_REG);
       AS_WriteReg(IP_CAM_START_REG, x"00000001");
       AS_WriteReg(IP_CAM_SNAPSHOT_REG, x"00000001");
