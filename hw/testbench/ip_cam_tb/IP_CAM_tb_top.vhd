@@ -6,6 +6,8 @@ use work.cmos_sensor_output_generator_constants.all;
 
 entity ip_cam_tb is end;
 
+
+
 architecture bench of ip_cam_tb is
 
    signal nReset          : std_logic;
@@ -75,21 +77,29 @@ architecture bench of ip_cam_tb is
    constant IP_CAM_STOP_REG      : std_logic_vector(2 downto 0)  := "100"; --WO
    constant IP_CAM_SNAPSHOT_REG  : std_logic_vector(2 downto 0)  := "101"; --WO
 
+   constant START_ADDR_REG_VAL   : std_logic_vector(31 downto 0) := x"0000000F";
+   constant LENGTH_REG_VAL       : std_logic_vector(31 downto 0) := x"00000FFF";
+
    -- CHECK_DATA_OUT
    signal addr_exp         : std_logic_vector(31 downto 0) := (others => '0');
    signal data_exp         : std_logic_vector(31 downto 0) := (others => '0');
 
    signal data1_exp        : std_logic_vector(15 downto 0) := (others => '0');
-   signal data_red1_exp    : std_logic_vector(4 downto 0)  := (others => '0');
-   signal data_green1a_exp : std_logic_vector(5 downto 0)  := (others => '0');
-   signal data_green1b_exp : std_logic_vector(5 downto 0)  := (others => '0');
-   signal data_blue1_exp   : std_logic_vector(4 downto 0)  := (others => '0');
+   signal data_red1_exp    : std_logic_vector(5 downto 0)  := (others => '0');
+   signal data_green1a_exp : std_logic_vector(6 downto 0)  := (others => '0');
+   signal data_green1b_exp : std_logic_vector(6 downto 0)  := (others => '0');
+   signal data_blue1_exp   : std_logic_vector(5 downto 0)  := (others => '0');
 
    signal data2_exp        : std_logic_vector(15 downto 0) := (others => '0');
-   signal data_red2_exp    : std_logic_vector(4 downto 0)  := (others => '0');
-   signal data_green2a_exp : std_logic_vector(5 downto 0)  := (others => '0');
-   signal data_green2b_exp : std_logic_vector(5 downto 0)  := (others => '0');
-   signal data_blue2_exp   : std_logic_vector(4 downto 0)  := (others => '0');
+   signal data_red2_exp    : std_logic_vector(5 downto 0)  := (others => '0');
+   signal data_green2a_exp : std_logic_vector(6 downto 0)  := (others => '0');
+   signal data_green2b_exp : std_logic_vector(6 downto 0)  := (others => '0');
+   signal data_blue2_exp   : std_logic_vector(5 downto 0)  := (others => '0');
+
+   signal ligne_cnt        : unsigned(9 downto 0) := "0000000001";
+   signal old_hsync        : std_logic := '0';
+   signal old_vsync        : std_logic := '0';
+
 
 begin
    CMOS : entity work.cmos_sensor_output_generator
@@ -155,6 +165,8 @@ begin
 
 
    CHECK_DATA_OUT : process (AM_Write_n, clk, CamAddr_exp)
+      variable data_green1_exp : std_logic_vector(6 downto 0)  := (others => '0');
+      variable data_green2_exp : std_logic_vector(6 downto 0)  := (others => '0');
    begin
       if (falling_edge(AM_Write_n)) then
          -- AM_Address check
@@ -170,48 +182,64 @@ begin
            integer'image(to_integer(unsigned(data_exp))) severity error;
 
       elsif (rising_edge(AM_Write_n)) then
-         addr_exp          <= std_logic_vector(unsigned(addr_exp) + 1);
+         if (addr_exp = std_logic_vector(unsigned(START_ADDR_REG_VAL) + unsigned(LENGTH_REG_VAL))) then
+            addr_exp       <= START_ADDR_REG_VAL;
+         else
+            addr_exp       <= std_logic_vector(unsigned(addr_exp) + 1);
+         end if;
 
          data_red1_exp     <= std_logic_vector(unsigned(data_red1_exp)    + 4);
-         data_green1a_exp  <= std_logic_vector(unsigned(data_green1a_exp) + 4);
-         data_green1b_exp  <= std_logic_vector(unsigned(data_green1b_exp) + 4);
+         data_green1a_exp  <= "0" & std_logic_vector(resize(unsigned(data_green1a_exp), 6) + 4);
+         data_green1b_exp  <= "0" & std_logic_vector(resize(unsigned(data_green1b_exp), 6) + 4);
          data_blue1_exp    <= std_logic_vector(unsigned(data_blue1_exp)   + 4);
-         --data1_exp         <= data_red1_exp & std_logic_vector((unsigned(data_green1a_exp) + unsigned(data_green1b_exp)) / 2) & data_blue1_exp;
 
          data_red2_exp     <= std_logic_vector(unsigned(data_red2_exp)    + 4);
-         data_green2a_exp  <= std_logic_vector(unsigned(data_green2a_exp) + 4);
-         data_green2b_exp  <= std_logic_vector(unsigned(data_green2b_exp) + 4);
+         data_green2a_exp  <= "0" & std_logic_vector(resize(unsigned(data_green2a_exp), 6) + 4);
+         data_green2b_exp  <= "0" & std_logic_vector(resize(unsigned(data_green2b_exp), 6) + 4);
          data_blue2_exp    <= std_logic_vector(unsigned(data_blue2_exp)   + 4);
-         --data2_exp         <= data_red2_exp & std_logic_vector((unsigned(data_green2a_exp) + unsigned(data_green2b_exp)) / 2)  & data_blue2_exp;
-
-         --data_exp <= data2_exp & data1_exp;
-
 
       end if;
 
       if (nReset = '0') then
-         addr_exp          <= x"0000000F";
-         data_red1_exp     <= "00000" ;
-         data_green1a_exp  <= "000001";
-         data_green1b_exp  <= "110000";
-         data_blue1_exp    <= "11000" ;
+         addr_exp          <= START_ADDR_REG_VAL;
+         data_red1_exp     <= "000000" ; -- 0
+         data_green1a_exp  <= "0000001"; -- 1
+         data_green1b_exp  <= "0110000"; -- 
+         data_blue1_exp    <= "110000" ; -- 
          
-         data_red2_exp     <= "00001" ;
-         data_green2a_exp  <= "000011";
-         data_green2b_exp  <= "110010";
-         data_blue2_exp    <= "11001" ;
+         data_red2_exp     <= "000010" ; -- 
+         data_green2a_exp  <= "0000011"; -- 
+         data_green2b_exp  <= "0110010"; -- 
+         data_blue2_exp    <= "110010" ; -- 
 
          data_exp <= data2_exp & data1_exp;
+
       elsif (rising_edge(clk)) then
-	      data1_exp         <= data_red1_exp & std_logic_vector((unsigned(data_green1a_exp) + unsigned(data_green1b_exp)) / 2) & data_blue1_exp;
-	      data2_exp         <= data_red2_exp & std_logic_vector((unsigned(data_green2a_exp) + unsigned(data_green2b_exp)) / 2) & data_blue2_exp;
+         data_green1_exp   :=  std_logic_vector((unsigned(data_green1a_exp) + unsigned(data_green1b_exp)) / 2);
+         data_green2_exp   :=  std_logic_vector((unsigned(data_green2a_exp) + unsigned(data_green2b_exp)) / 2);
+	      data1_exp         <= data_red1_exp(5 downto 1) & data_green1_exp(5 downto 0) & data_blue1_exp(5 downto 1);
+	      data2_exp         <= data_red2_exp(5 downto 1) & data_green2_exp(5 downto 0) & data_blue2_exp(5 downto 1);
          data_exp          <= data2_exp & data1_exp;
+         if (Cam_Hsync = '1' and old_hsync = '0') then
+            if (ligne_cnt(0) = '0') then
+               data_red1_exp     <= std_logic_vector(       resize(ligne_cnt * 240                                           , data_red1_exp'length )  + to_unsigned(0 , data_red1_exp'length    ));
+               data_green1a_exp  <= std_logic_vector("0" &  resize(ligne_cnt * 240 + to_unsigned(1 , data_green1a_exp'length), data_red1_exp'length )                                             );
+               data_green1b_exp  <= std_logic_vector("0" &  resize(ligne_cnt * 240 + to_unsigned(48, data_green1b_exp'length), data_red1_exp'length )                                             );
+               data_blue1_exp    <= std_logic_vector(       resize(ligne_cnt * 240                                           , data_blue1_exp'length)  + to_unsigned(49, data_blue1_exp'length   ));
+
+               data_red2_exp     <= std_logic_vector(       resize(ligne_cnt * 240                                           , data_red2_exp'length )  + to_unsigned(2 , data_red2_exp'length    ));
+               data_green2a_exp  <= std_logic_vector("0" &  resize(ligne_cnt * 240 + to_unsigned(3 , data_green2a_exp'length), data_red1_exp'length )                                             );
+               data_green2b_exp  <= std_logic_vector("0" &  resize(ligne_cnt * 240 + to_unsigned(50, data_green2b_exp'length), data_red1_exp'length )                                             );
+               data_blue2_exp    <= std_logic_vector(       resize(ligne_cnt * 240                                           , data_blue2_exp'length)  + to_unsigned(51, data_blue2_exp'length   ));
+            end if;
+            ligne_cnt <= ligne_cnt + 1;
+         end if;
+         if (Cam_Vsync = '1' and old_vsync = '0') then
+            ligne_cnt <= "0000000000";
+         end if;
+         old_hsync <= Cam_Hsync;
+         old_vsync <= Cam_Vsync;
       end if;
-
-      --if (CamAddr_exp'event) then
-      --   addr_exp <=  CamAddr_exp;
-      --end if;
-
    end process;
 
    -- stimulus generator
@@ -337,9 +365,9 @@ begin
       AS_ReadReg (IP_CAM_STATUS_REG);
 
       --start aquisition
-      AS_WriteReg(IP_CAM_ADDR_REG, x"0000000F");
+      AS_WriteReg(IP_CAM_ADDR_REG, START_ADDR_REG_VAL);
       AS_ReadReg (IP_CAM_ADDR_REG);
-      AS_WriteReg(IP_CAM_LENGTH_REG, x"FFFFFFFF");
+      AS_WriteReg(IP_CAM_LENGTH_REG, LENGTH_REG_VAL);
       AS_ReadReg (IP_CAM_LENGTH_REG);
       AS_WriteReg(IP_CAM_START_REG, x"00000001");
       AS_WriteReg(IP_CAM_SNAPSHOT_REG, x"00000001");

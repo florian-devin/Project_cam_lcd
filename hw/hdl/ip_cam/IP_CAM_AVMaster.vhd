@@ -46,30 +46,26 @@ architecture comp of ip_cam_avmaster is
 begin
 
 
-    process(clk, nReset, new_frame, waitRequest, state_reg, fifo_empty)
+    STATE_LOGIC : process(clk, nReset)
     begin
         if nReset = '0' then
             state_reg       <= ST_IDLE;
             addr_reg        <= start_addr;
-            state_next      <= ST_IDLE;
-            addr_next       <= start_addr;
-            ack             <= '0';
-
-            address         <= (others => '0');
-            write_n         <= '1';
-            byteEnable_n    <= (others => '1');
-            burstCount      <= (others => '0');
-            datawr          <= (others => '0');
 
         elsif rising_edge(clk) then
             state_reg   <= state_next;
             addr_reg    <= addr_next;
+        end if;
+        end process;
+
+        NEXT_STATE : process(clk, nReset, new_frame, waitRequest, state_reg, fifo_empty)
+        begin
+            state_next  <= state_reg;
+            addr_next   <= addr_reg;
             case state_reg is 
                 when ST_IDLE =>
                     addr_next        <= start_addr;
-
                     ack             <= '0';
-
                     address         <= (others => '0');
                     write_n         <= '1';
                     byteEnable_n    <= (others => '1');
@@ -88,21 +84,22 @@ begin
                         datawr          <= data;
                         write_n         <= '0';
                         byteEnable_n    <= "0000";
-
-                    --elsif new_frame = '0' then
-                    --    state_next  <= ST_WAIT_LCD;
                     end if;
 
                 when ST_WRITE =>
                     if waitRequest = '0' then
                         state_next  <= ST_ACK;
-                        addr_next   <= std_logic_vector(unsigned(addr_reg) + 1);
-                        --state_next  <= ST_WAIT_DATA;
+                        if (addr_reg = std_logic_vector(unsigned(start_addr) + unsigned(length))) then 
+                            addr_next <= start_addr;
+                        else
+                            addr_next   <= std_logic_vector(unsigned(addr_reg) + 1);
+                        end if;
                         write_n         <= '1';
+                        ack <= '1';
                     end if;
                 
                 when ST_ACK => 
-                    ack         <= '1';
+                    ack         <= '0';
                     state_next  <= ST_WAIT_DATA;
 
                 when ST_WAIT_LCD =>
@@ -118,82 +115,5 @@ begin
                     end if;
             end case;
 
-        end if;
-
     end process;
-
-
---    process(clk, nReset, new_frame, waitRequest, new_data, state_reg)
---    begin
---        if nReset = '0' then
---            state_reg       <= ST_IDLE;
---            addr_reg        <= start_addr;
---            state_next      <= ST_IDLE;
---            addr_next       <= start_addr;
---            ack             <= '0';
---
---            address         <= (others => '0');
---            write_n         <= '1';
---            byteEnable_n    <= (others => '1');
---            burstCount      <= (others => '0');
---            datawr          <= (others => '0');
---
---        elsif rising_edge(clk) then
---            state_reg   <= state_next;
---            addr_reg    <= addr_next;
---            case state_reg is 
---                when ST_IDLE =>
---                    addr_next        <= start_addr;
---
---                    ack             <= '0';
---
---                    address         <= (others => '0');
---                    write_n         <= '1';
---                    byteEnable_n    <= (others => '1');
---                    burstCount      <= (others => '0');
---                    datawr          <= (others => '0');
---
---                    if new_frame = '1' then
---                        state_next <= ST_WAIT_DATA;
---                    end if;
---
---                when ST_WAIT_DATA => 
---                    if new_data = '1' then
---                        state_next      <= ST_WRITE;
---                        address         <= addr_reg;
---                        datawr          <= data;
---                        write_n         <= '0';
---                        byteEnable_n    <= "0000";
---
---                    --elsif new_frame = '0' then
---                    --    state_next  <= ST_WAIT_LCD;
---                    end if;
---
---                when ST_WRITE =>
---                    if waitRequest = '0' then
---                        state_next  <= ST_ACK;
---                        write_n         <= '1';
---                    end if;
---                
---                when ST_ACK => 
---                    ack         <= '1';
---                    addr_next   <= std_logic_vector(unsigned(addr_reg) + 1);
---                    state_next  <= ST_WAIT_DATA;
---
---                when ST_WAIT_LCD =>
---                    state_next      <= ST_WRITE_LCD;
---                    address         <= LDC_addr;
---                    datawr(1)       <= '1';
---                    write_n         <= '0';
---                    byteEnable_n    <= "0000";
---
---                when ST_WRITE_LCD => 
---                    if waitRequest = '0' then
---                        state_next  <= ST_IDLE;
---                    end if;
---            end case;
---
---        end if;
---
---    end process;
 end comp;
