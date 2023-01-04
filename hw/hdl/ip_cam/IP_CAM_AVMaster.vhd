@@ -52,7 +52,7 @@ architecture comp of ip_cam_avmaster is
 begin
 
 
-    STATE_LOGIC : process(clk, nReset, capture_done)
+    STATE_LOGIC : process(clk, nReset, capture_done, start_addr, addr_reg)
     begin
         if nReset = '0' then
             state_reg       <= ST_IDLE;
@@ -70,7 +70,7 @@ begin
         end if;
         end process;
 
-        NEXT_STATE : process(clk, nReset, new_frame, waitRequest, state_reg, fifo_empty)
+        NEXT_STATE : process(clk, nReset, new_frame, waitRequest, state_reg, fifo_empty, length, start_addr, addr_reg, data, addr_reg)
         begin
             state_next  <= state_reg;
             addr_next   <= addr_reg;
