@@ -26,13 +26,16 @@ entity ip_cam_avmaster is
         fifo_empty      : in  std_logic;
         --new_data        : in  std_logic;
         new_frame       : in  std_logic;
-        ack             : out std_logic
+        ack             : out std_logic;
+
+        capture_done    : in  std_logic;
+        LCD_addr        : in  std_logic_vector(31 downto 0)
     );
 end ip_cam_avmaster;
 
 architecture comp of ip_cam_avmaster is
 
-    constant LDC_addr : std_logic_vector(31 downto 0) := (others => '1');  -- TODO : Change LDC addr
+    --constant LCD_addr : std_logic_vector(31 downto 0) := (others => '1');  -- TODO : Change LCD addr
     -- State reg
     type fsm_states is (
         ST_IDLE, ST_WAIT_DATA, ST_WRITE, ST_ACK, ST_WAIT_LCD, ST_WRITE_LCD
@@ -43,18 +46,24 @@ architecture comp of ip_cam_avmaster is
     signal addr_reg, addr_next      : std_logic_vector(31 downto 0);
     signal write_data               : std_logic_vector(31 downto 0);
 
+    signal capture_done_req         : std_logic;
+
 begin
 
 
-    STATE_LOGIC : process(clk, nReset)
+    STATE_LOGIC : process(clk, nReset, capture_done)
     begin
         if nReset = '0' then
             state_reg       <= ST_IDLE;
             addr_reg        <= start_addr;
+            capture_done_req <= '0';
 
         elsif rising_edge(clk) then
             state_reg   <= state_next;
             addr_reg    <= addr_next;
+            if (capture_done = '1') then
+                capture_done_req <= '1';
+            end if;
         end if;
         end process;
 
@@ -84,8 +93,11 @@ begin
                         datawr          <= data;
                         write_n         <= '0';
                         byteEnable_n    <= "0000";
+                    elsif capture_done_req = '1' then
+                        state_next      <= ST_WRITE_LCD;
+                        addr_next       <= start_addr;
                     end if;
-
+                    
                 when ST_WRITE =>
                     if waitRequest = '0' then
                         state_next  <= ST_ACK;
@@ -103,15 +115,19 @@ begin
                     state_next  <= ST_WAIT_DATA;
 
                 when ST_WAIT_LCD =>
-                    state_next      <= ST_WRITE_LCD;
-                    address         <= LDC_addr;
-                    datawr(1)       <= '1';
-                    write_n         <= '0';
-                    byteEnable_n    <= "0000";
+                    --state_next      <= ST_WRITE_LCD;
+                    --address         <= LCD_addr;
+                    --datawr(1)       <= '1';
+                    --write_n         <= '0';
+                    --byteEnable_n    <= "0000";
 
                 when ST_WRITE_LCD => 
                     if waitRequest = '0' then
-                        state_next  <= ST_IDLE;
+                        address         <= LCD_addr;
+                        datawr(1)       <= '1';
+                        write_n         <= '0';
+                        byteEnable_n    <= "0000";
+                        state_next      <= ST_IDLE;
                     end if;
             end case;
 

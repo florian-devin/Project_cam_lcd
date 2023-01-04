@@ -49,6 +49,8 @@ architecture rtl of IP_CAM_Top is
     signal new_frame    : std_logic;
     signal ack          : std_logic;
 
+    signal LCD_addr     : std_logic_vector(31 downto 0);
+
 begin
     IP_CAM_AVSlave : entity work.ip_cam_avslave
         port map(
@@ -69,7 +71,9 @@ begin
     
             -- Internal interface (to frame)
             capture_done    => capture_done,
-            acquisition     => acquisition
+            acquisition     => acquisition,
+
+            LCD_addr        => LCD_addr
 
         );
 
@@ -94,9 +98,11 @@ begin
             -- Internal interface (to frame)
             data            => data,
             fifo_empty      => empty,
-            --new_data        => new_data,
             new_frame       => new_frame,
-            ack             => ack
+            ack             => ack,
+
+            capture_done    => capture_done,
+            LCD_addr        => LCD_addr
         );
 
     IP_CAM_Frame : entity work.IP_CAM_Frame

@@ -22,7 +22,9 @@ entity ip_cam_avslave is
 
         -- Internal interface (to frame)
         capture_done    : in  std_logic;
-        acquisition     : out std_logic
+        acquisition     : out std_logic;
+
+        LCD_addr        : out std_logic_vector(31 downto 0)
     );
 end ip_cam_avslave;
 
@@ -34,6 +36,7 @@ architecture comp of ip_cam_avslave is
     signal CamStart     : std_logic;
     signal CamStop      : std_logic;
     signal CamSnapshot  : std_logic;
+    signal CamLCDAdrr   : std_logic_vector(31 downto 0);
 
 begin
 
@@ -49,14 +52,15 @@ begin
             CamStart        <= '0';
             CamSnapshot     <= '0';
             CamStop         <= '0';
+            CamLCDAdrr      <= (others => '0');
 
         elsif rising_edge(clk) then
             readdata        <= (others => '0');
-            acquisition     <= CamStart and CamSnapshot;
-            CamStatus       <= capture_done;
+            acquisition     <= '0';
 
             if (capture_done = '1') then
                 CamSnapshot <= '0';
+                CamStatus   <= '0';
             end if;
             
             start_addr      <= CamAddr;
@@ -66,10 +70,21 @@ begin
                 case address is
                     when "000" => CamAddr       <= writedata;
                     when "001" => CamLength     <= writedata;
-                    when "011" => CamStart      <= '1';
-                    when "100" => CamStart      <= '0'; 
+                    when "011" => 
+                        CamStart      <= '1';
+                        if (CamSnapshot = '1') then
+                            acquisition <= '1';
+                            CamStatus   <= '1';
+                        end if;
+                    when "100" => CamStart      <= '0';
                                   CamSnapshot   <= '0';     --CamStop
-                    when "101" => CamSnapshot   <= '1';
+                    when "101" => 
+                        CamSnapshot   <= '1';
+                        if (CamStart = '1') then
+                            acquisition <= '1';
+                            CamStatus   <= '1';
+                        end if;
+                    when "110" => CamLCDAdrr <= writedata;
                     when others => null;
                 end case;
             end if;
@@ -81,11 +96,13 @@ begin
                     when "001" => readdata      <= CamLength;
                     when "010" => readdata(0)   <= CamStatus;
                                   readdata(31 downto 1) <= x"0000000" & "000";
+                    when "110" => readdata      <= CamLCDAdrr;
                     when others => null;
                 end case;
             end if;
         end if;
 
     end process;
+    LCD_addr <= CamLCDAdrr;
 
 end comp;
