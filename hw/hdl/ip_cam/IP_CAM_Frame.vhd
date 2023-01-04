@@ -77,10 +77,7 @@ architecture  behav of IP_CAM_Frame is
                         ST_WAIT_LINE_CHANGE_RG,
                         ST_SAMPLE_GREEN2,
                         ST_SAMPLE_BLUE,
-                        ST_CONVERT,
-                        ST_SEND,
-                        ST_DATA_CONTINUE,
-                        ST_END);
+                        ST_SEND);
     signal state   : STATE_TYPE;
 
 begin
@@ -271,7 +268,7 @@ begin
 
             -- or if the frame has ended
             elsif Vsync = '0' then
-                state <= ST_END;
+                state <= ST_IDLE;
             
             -- Else acquire the GREEN2 pixel sent
             else 
