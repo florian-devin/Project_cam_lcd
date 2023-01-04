@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include "i2c/i2c.h"
+#include "i2c.h"
 
 bool trdb_d5m_write(i2c_dev *i2c, uint8_t register_offset, uint16_t data) {
     uint8_t byte_data[2] = {(data >> 8) & 0xff, data & 0xff};
