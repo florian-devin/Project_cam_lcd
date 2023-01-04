@@ -328,9 +328,10 @@ begin
             if Hsync = '1' and old_hsync ='0' then
                 state <= ST_SAMPLE_RED;
                 first_red <= '1';
-            else Vsync = '0' then
+            elsif Vsync = '0' then
                 capture_done <= '1';
                 state <= ST_IDLE;
+            else null;
             end if;
             old_hsync <= Hsync;
 --------------------------------------------------------------
